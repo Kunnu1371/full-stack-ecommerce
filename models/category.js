@@ -5,7 +5,7 @@ const categorySchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: true,
-        maxlength: 32
+        maxlength: 60
     }
 },  {
     timestamps: true

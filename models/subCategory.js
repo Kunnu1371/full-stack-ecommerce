@@ -2,17 +2,22 @@ const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema
 
 const subCategorySchema = new mongoose.Schema({
+    CategoryName: {
+        type: String,
+        required: true
+    },
     name: {
         type: String,
         trim: true,
         required: true,
-        maxlength: 32
+        maxlength: 60
     }, 
     category: {
         type: ObjectId,
         ref: 'Category',
         required: true
-    }
+    },
+
 },  {
     timestamps: true
 })
