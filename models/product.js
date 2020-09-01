@@ -47,9 +47,6 @@ const productSchema = new mongoose.Schema({
     services: {
         type: String
     },
-    subCategory: {
-        type: ObjectId
-    },
     features: {
         type: String
     },

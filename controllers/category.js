@@ -10,6 +10,6 @@ exports.create = (req, res) => {
                 error: errorHandler(err)
             })
         }
-        res.json({data})
+        res.json({message: "Category created successfully ", data})
     })
 }
