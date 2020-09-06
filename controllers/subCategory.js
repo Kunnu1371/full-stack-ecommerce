@@ -68,3 +68,16 @@ exports.remove = (req, res) => {
         })
     })
 }
+
+
+
+exports.list = (req, res) => {
+    subCateogry.find().exec((err, data) => {
+        if(err) {
+            res.status(400).json({
+                error: err
+            })
+        }
+       res.json(data)
+    })
+}
