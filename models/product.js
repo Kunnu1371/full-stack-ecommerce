@@ -47,6 +47,10 @@ const productSchema = new mongoose.Schema({
     services: {
         type: String
     },
+    shipping: {
+        required: false,
+        type: Boolean
+    },
     features: {
         type: String
     },
