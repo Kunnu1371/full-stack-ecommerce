@@ -1,6 +1,7 @@
 const Cateogry = require('../models/category')
 const { errorHandler } = require('../helpers/dbErrorHandler')
-// const category = require('../models/category')
+const subCategory = require('../models/subCategory')
+
 
 exports.categoryById = (req, res, next, id) => {
     Cateogry.findById(id).exec((err, category) => {
@@ -72,4 +73,15 @@ exports.list = (req, res) => {
         }
        res.json(data)
     })
+}
+
+exports.fetch = (req, res) => {
+    subCategory.find({category : req.category}).exec((err, data) => {
+        if(err) {
+            res.status(400).json({
+                error: err
+            })
+        }
+        res.json(data)
+    });
 }

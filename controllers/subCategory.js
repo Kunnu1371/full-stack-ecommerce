@@ -1,5 +1,6 @@
 const subCateogry = require('../models/subCategory')
 const Category = require('../models/category')
+const Product = require('../models/product')
 const { errorHandler } = require('../helpers/dbErrorHandler')
 const { result } = require('lodash')
 
@@ -78,6 +79,17 @@ exports.list = (req, res) => {
                 error: err
             })
         }
-       res.json(data)
+       res.json(data) 
     })
 }
+
+// exports.fetch = (req, res) => {
+//     Product.find({category : req.subCategory}) .select("-photo").exec((err, data) => {
+//         if(err) {
+//             res.status(400).json({
+//                 error: err
+//             })
+//         }
+//         res.json(data)
+//     });
+// }

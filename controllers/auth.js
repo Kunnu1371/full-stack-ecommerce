@@ -22,7 +22,7 @@ exports.signup = (req, res) => {
     })
 } 
 
-exports.signin = (req, res) => {
+exports.signin = (req, res) => { 
     // Check user based on email
     const { email, password} = req.body
     user.findOne({email}, (err, user) => {
