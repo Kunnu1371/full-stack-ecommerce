@@ -52,7 +52,7 @@ export const updateItem = (productId, count) => {
 
 
 
-export const removeItem = (productId, count) => {
+export const removeItem = (productId) => {
     let cart = []
     if(typeof window !== 'undefined') {
         if(localStorage.getItem('cart')) {
@@ -61,11 +61,17 @@ export const removeItem = (productId, count) => {
 
         cart.map((product, i) => {
             if(product._id === productId) {
-                cart.splice(cart[i], 1) 
+                cart.splice(i, 1) 
             }
         })
 
         localStorage.setItem('cart', JSON.stringify(cart))
     }
     return cart
+}
+
+export const getTotal = () => {
+    return products.reduce((currentValue, nextValue) => {
+        return currentValue + nextValue.price * nextValue.count
+    }, 0)
 }
