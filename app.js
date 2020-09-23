@@ -10,6 +10,7 @@ const userRoutes = require('./routes/user')
 const categoryRoutes = require('./routes/category')
 const subCategoryRoutes = require('./routes/subCategory')
 const productRoutes = require('./routes/product')
+const orderRoutes = require('./routes/order')
 
 // Middlewares
 app.use(morgran('dev'))
@@ -24,6 +25,7 @@ app.use('/api', userRoutes)
 app.use('/api', categoryRoutes)
 app.use('/api', subCategoryRoutes)
 app.use('/api', productRoutes)
+app.use('/api', orderRoutes)
 
 
 app.listen(3000, () => {
