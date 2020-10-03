@@ -1,10 +1,10 @@
-const Cateogry = require('../models/category')
+const Category = require('../models/category')
 const { errorHandler } = require('../helpers/dbErrorHandler')
 const subCategory = require('../models/subCategory')
 
 
 exports.categoryById = (req, res, next, id) => {
-    Cateogry.findById(id).exec((err, category) => {
+    Category.findById(id).exec((err, category) => {
         if(err || !category) {
             res.status(400).json({
                 error: "Category not found."
@@ -20,16 +20,22 @@ exports.read = (req, res) => {
 }
 
 
-exports.create = (req, res) => {
-    const category = new Cateogry(req.body)
-    category.save((err, data) => {
+exports.create = async (req, res) => {
+    // check category already exist in db or not
+    if(await Category.findOne({ name: { $regex: `^${req.body.name}$`, $options: "i" } })) {
+        res.status(400).json("Category already exists")
+    }
+    else {
+        const category = new Category(req.body)
+        category.save((err, data) => {
         if(err) {
-            return res.status(400).json({
-                error: errorHandler(err)
-            })
-        }
+        return res.status(400).json({
+            error: errorHandler(err)
+        })
+    }
         res.json({message: "Category created successfully ", data})
     })
+    }
 }
 
 
@@ -65,7 +71,7 @@ exports.remove = (req, res) => {
 }
 
 exports.list = (req, res) => {
-    Cateogry.find().exec((err, data) => {
+    Category.find().exec((err, data) => {
         if(err) {
             res.status(400).json({
                 error: err

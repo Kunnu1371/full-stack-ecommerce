@@ -1,4 +1,4 @@
-const subCateogry = require('../models/subCategory')
+const subCategory = require('../models/subCategory')
 const Category = require('../models/category')
 const Product = require('../models/product')
 const { errorHandler } = require('../helpers/dbErrorHandler')
@@ -20,27 +20,32 @@ exports.read = (req, res) => {
     return res.json(req.subCategory)
 }
 
-exports.create = (req, res) => {
-    const subCategory = new subCateogry(req.body)
+exports.create = async (req, res) => {
     console.log(req.body.category)
-    Category.findById(req.body.category).exec((err, result) => {
-        if(err) {
-            return res.status(400).json({
-                error: err
-            })
-        }
-        if(result) {
-            subCategory.save((err, data) => {
-                if(err) {
-                    return res.status(400).json({result})
-                }
-                res.json({message: "Sub-Category created successfully", data})
-            })
-        }
-        else{
-            return res.status(400).json({ message: "Cannot create Sub-Category as it's Category doesn't exist"})
-        }
-    })
+    if(await subCategory.findOne({ name: {$regex:`${req.body.name}`, $options:"$i"}})) {
+        res.status(400).json("sub category already exist.")
+     }
+    else {
+        Category.findById(req.body.category).exec((err, result) => {
+            if(err) {
+                return res.status(400).json({
+                    error: err
+                })
+            }
+            if(result) {
+                const createdSubCategory = new subCategory(req.body)
+                createdSubCategory.save((err, data) => {
+                    if(err) {
+                        return res.status(400).json({result})
+                    }
+                    res.json({message: "Sub-Category created successfully", data})
+                })
+            }
+            else{
+                return res.status(400).json({ message: "Cannot create Sub-Category as it's Category doesn't exist"})
+            }
+        })
+    }
 }
 
 exports.update = (req, res) => {
