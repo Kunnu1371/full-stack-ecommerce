@@ -189,7 +189,9 @@ exports.list = (req, res) => {
 // sell / arrival
 // by sell = /products?sortBy=sold&order=desc&limit=4
 // by arrival = /products?sortBy=createdAt&order=desc&limit=4
+// by price = /products?sortBy=price&order=desc&limit=4
 // if no params are sent, then all products are returned
+
 
 exports.listRelated = (req, res) => {
     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
@@ -290,8 +292,3 @@ exports.decreaseQuantity = (req, res, next) => {
        next()
     })
 }
-
-
-
-
-
