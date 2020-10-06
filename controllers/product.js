@@ -164,28 +164,70 @@ exports.remove = (req, res) => {
 // }
 
 
-exports.list = (req, res) => {
-    let order = req.query.order ? req.query.order : 'asc';
-    let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
-    let limit = req.query.limit ? parseInt(req.query.limit) : 6;
-    console.log(req.query)
-    Product.find()
-        .select("-photo")
-        .populate("category")
-        // .limit(1)
-        // .sort([['createdAt', -1]])
-        .limit(limit)
-        .sort([[sortBy, order]])
-        .exec((err, products) => {
-            if(err) {
-                res.status(400).json({
-                    error: "Product not found"
-                })
-            }
-           res.json(products)
-        })
-}
+// exports.list = (req, res) => {
+//     let order = req.query.order ? req.query.order : 'asc';
+//     let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
+//     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+//     console.log(req.query)
+//     Product.find()
+//         .select("-photo")
+//         .populate("category")
+//         // .limit(1)
+//         // .sort([['createdAt', -1]])
+//         .limit(limit)
+//         .sort([[sortBy, order]])
+//         .exec((err, products) => {
+//             if(err) {
+//                 res.status(400).json({
+//                     error: "Product not found"
+//                 })
+//             }
+//            res.json(products)
+//         })
+// }
 
+
+exports.paginatedResults = (Product) => {
+    return async (req, res, next) => {
+        let order = req.query.order ? req.query.order : 'asc';
+        let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
+        let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+        const page = parseInt(req.query.page)
+    
+        console.log(req.query)
+      const startIndex = (page - 1) * limit
+      const endIndex = page * limit
+  
+      const results = {}
+  
+      if (endIndex < await Product.countDocuments().exec()) {
+        results.next = {
+          page: page + 1,
+          limit: limit
+        }
+      }
+      
+      if (startIndex > 0) {
+        results.previous = {
+          page: page - 1,
+          limit: limit
+        }
+      }
+      try {
+        results.results = await Product.find()
+                                        .select("-photo")
+                                        .populate("category")
+                                        .sort([[sortBy, order]])
+                                        .limit(limit)
+                                        .skip(startIndex)
+                                        .exec()
+        res.paginatedResults = results
+        next()
+      } catch (e) {
+        res.status(500).json({ message: e.message })
+      }
+    }
+  }
 // sell / arrival
 // by sell = /products?sortBy=sold&order=desc&limit=4
 // by arrival = /products?sortBy=createdAt&order=desc&limit=4
