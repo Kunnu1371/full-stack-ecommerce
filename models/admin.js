@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: Number,
-        default: 0
+        default: 1
     },
     history: {
         type: Array,
@@ -72,4 +72,4 @@ userSchema.methods = {
     }
 }
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Admin', userSchema);
