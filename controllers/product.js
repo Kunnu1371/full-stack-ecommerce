@@ -115,8 +115,19 @@ exports.update = (req, res) => {
                     error: "Image should be less than 1mb in size."
                 })
             }
-            product.photo.data = fs.readFileSync(files.photo.path)
+            // product.photo.data = fs.readFileSync(files.photo.path)
+            product.photo.data = files.photo.path
             product.photo.contentType = files.photo.type
+            
+            var oldPath = files.photo.path; 
+            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+            var rawData = fs.readFileSync(oldPath) 
+            console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
+          
+            fs.writeFile(newPath, rawData, (err) => { 
+                if(err) console.log(err) 
+                // res.send("Successfully uploaded") 
+            })  
         }
 
 
