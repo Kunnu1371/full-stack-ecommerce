@@ -3,8 +3,8 @@ const router = express.Router()
 
 const { read, voucherById, VoucherGenerator } = require('../controllers/voucher')
 const { adminById }  = require('../controllers/admin')
-const { isAdmin, isAuth} = require('../controllers/authAdmin')
-router.post('/voucher/create/:adminId',isAdmin,  VoucherGenerator)
+const { isAdmin, isAuth, requireSignin} = require('../controllers/authAdmin')
+router.post('/voucher/create/:adminId', requireSignin, isAdmin, isAuth, VoucherGenerator)
 router.get('/voucher/:voucherId', read)
 
 router.param('voucherId', voucherById)

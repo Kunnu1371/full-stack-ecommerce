@@ -61,6 +61,7 @@ exports.read = (req, res) => {
 }
 
 exports.voucherVerification = (req, res) => {
-    let voucher = req.body
+    let voucher = req.body.voucher
+    
 
 }  
