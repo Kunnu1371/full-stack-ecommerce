@@ -4,7 +4,7 @@ const formidable = require('formidable')
 const _ = require('lodash')
 const fs = require('fs')
 const subCategory = require('../models/subCategory')
-const { param } = require('../routes/product')
+const path = require('path')
 
 exports.productById = (req,res, next, id) => {
     Product.findById(id).exec((err, product) => {
@@ -41,19 +41,28 @@ exports.create = (req, res) => {
         }
 
         let product = new Product(fields)
+        // console.log(fields.category)
 
-        console.log(fields.category)
-        
         if(files.photo) { 
             if(files.photo.size > 1000000) {
                 return res.status(400).json({
                     error: "Image should be less than 1mb in size."
                 })
             }
-            product.photo.data = fs.readFileSync(files.photo.path)
+            // product.photo.data = fs.readFileSync(files.photo.path)
+            product.photo.data =  files.photo.path
             product.photo.contentType = files.photo.type
-        }
 
+            var oldPath = files.photo.path; 
+            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+            var rawData = fs.readFileSync(oldPath) 
+            console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
+          
+            fs.writeFile(newPath, rawData, (err) => { 
+                if(err) console.log(err) 
+                // res.send("Successfully uploaded") 
+            })  
+        }
 
         // Check if req.category exist or not
         subCategory.findById(fields.category).exec((err, result) => {
@@ -62,7 +71,7 @@ exports.create = (req, res) => {
                 console.log(id)
             }
             // category found
-          if(result) {
+          if(result) {  
                 product.save((err, result) => {
                     if(err) {
                         return res.status(400).json({
@@ -75,8 +84,7 @@ exports.create = (req, res) => {
             else{
                 return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})
             }
-        })
-        
+        })  
     })
 }
 
