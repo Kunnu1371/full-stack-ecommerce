@@ -17,4 +17,4 @@ router.param('userId', userById)
 router.param('subCategoryId', subCategoryById)
 
 
-module.exports = router;
+module.exports = router; 

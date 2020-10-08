@@ -5,7 +5,7 @@ const { errorHandler } = require('../helpers/dbErrorHandler')
 const { result } = require('lodash')
 
 exports.subCategoryById = (req, res, next, id) => {
-    subCateogry.findById(id).exec((err, subCategory) => {
+    subCategory.findById(id).exec((err, subCategory) => {
         if(err || !subCategory) {
             res.status(400).json({
                 error: "Sub-Category not found."
@@ -36,7 +36,7 @@ exports.create = async (req, res) => {
                 const createdSubCategory = new subCategory(req.body)
                 createdSubCategory.save((err, data) => {
                     if(err) {
-                        return res.status(400).json({result})
+                        return res.status(400).json({error: err})
                     }
                     res.json({message: "Sub-Category created successfully", data})
                 })
@@ -78,7 +78,7 @@ exports.remove = (req, res) => {
 
 
 exports.list = (req, res) => {
-    subCateogry.find().exec((err, data) => {
+    subCategory.find().exec((err, data) => {
         if(err) {
             res.status(400).json({
                 error: err

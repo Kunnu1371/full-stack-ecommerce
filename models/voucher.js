@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-
+const { ObjectId } = mongoose.Schema
 const voucherSchema = new mongoose.Schema({
     
     voucherCode: {
@@ -8,6 +8,12 @@ const voucherSchema = new mongoose.Schema({
 
     amount: {
         type: Number,
+        required: true
+    },
+
+    voucherCategory: {
+        type: ObjectId,
+        ref: 'subCategory',
         required: true
     },
 
@@ -29,4 +35,4 @@ const voucherSchema = new mongoose.Schema({
     },
 })
 
-module.export = mongoose.model('Voucher', voucherSchema)
+module.exports = mongoose.model('Voucher', voucherSchema)
