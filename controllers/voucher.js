@@ -39,7 +39,7 @@ exports.VoucherGenerator = async (req, res) => {
             } 
 
             const voucher = new Voucher(voucherObj)
-
+  
             voucher.save((err, createdVoucher) => {
                 if(err) {
                     return res.status(400).json({
