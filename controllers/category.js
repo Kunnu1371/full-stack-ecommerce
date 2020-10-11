@@ -21,10 +21,14 @@ exports.read = (req, res) => {
 
 
 exports.create = async (req, res) => {
+    if(!req.body.name||req.body.name.trim() == "") {
+        return res.status(400).json("Sub Category name is required. Please enter category name")
+    }
     // check category already exist in db or not
     if(await Category.findOne({ name: { $regex: `^${req.body.name}$`, $options: "i" } })) {
-        res.status(400).json("Category already exists")
+        return res.status(400).json("Category already exists")
     }
+    
     else {
         const category = new Category(req.body)
         category.save((err, data) => {

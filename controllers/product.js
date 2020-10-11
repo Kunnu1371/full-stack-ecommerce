@@ -26,7 +26,7 @@ exports.read = (req, res) => {
 exports.create = (req, res) => {
     let form = new formidable.IncomingForm()
     form.keepExtensions = true
-    form.parse(req, (err, fields, files) => {
+    form.parse(req, async (err, fields, files) => {
         if(err) {
             return res.status(400).json({
                 error: 'Image could not be uploaded'
@@ -38,6 +38,11 @@ exports.create = (req, res) => {
             return res.status(400).json({
                 error: "All fields are required."
             })
+        }
+
+        if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
+            console.log("lsvdklsmv")
+            return res.status(400).json("Product already exist.")
         }
 
         let product = new Product(fields)
@@ -67,7 +72,7 @@ exports.create = (req, res) => {
         // Check if req.category exist or not
         subCategory.findById(fields.category).exec((err, result) => {
             if(err) {
-                res.status(400).json()
+                res.status(400).json(err)
                 console.log(id)
             }
             // category found

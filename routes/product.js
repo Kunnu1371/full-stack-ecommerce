@@ -13,7 +13,6 @@ router.delete('/product/:productId/:userId', requireSignin, isAdmin, isAuth, rem
 router.get('/products/related/:productId', listRelated)
 router.post("/products/by/search", listBySearch);
 router.get('/product/photo/:productId', photo)
-
 router.get('/products', paginatedResults(Product), (req, res) => {
     res.json(res.paginatedResults)
   })

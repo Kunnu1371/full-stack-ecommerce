@@ -2,7 +2,6 @@ const subCategory = require('../models/subCategory')
 const Category = require('../models/category')
 const Product = require('../models/product')
 const { errorHandler } = require('../helpers/dbErrorHandler')
-const { result } = require('lodash')
 
 exports.subCategoryById = (req, res, next, id) => {
     subCategory.findById(id).exec((err, subCategory) => {
@@ -21,10 +20,13 @@ exports.read = (req, res) => {
 }
 
 exports.create = async (req, res) => {
-    console.log(req.body.category)
+    // console.log(req.body.category)
+    if(!req.body.name||req.body.name.trim() == "") {
+        return res.status(400).json("Sub Category name is required. Please enter category name")
+    }
     if(await subCategory.findOne({ name: {$regex:`${req.body.name}`, $options:"$i"}})) {
         res.status(400).json("sub category already exist.")
-     }
+    }
     else {
         Category.findById(req.body.category).exec((err, result) => {
             if(err) {
@@ -36,7 +38,7 @@ exports.create = async (req, res) => {
                 const createdSubCategory = new subCategory(req.body)
                 createdSubCategory.save((err, data) => {
                     if(err) {
-                        return res.status(400).json({error: err})
+                        return res.status(400).json({error: errorHandler(err)})
                     }
                     res.json({message: "Sub-Category created successfully", data})
                 })
