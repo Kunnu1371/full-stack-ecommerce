@@ -41,7 +41,6 @@ exports.create = (req, res) => {
         }
 
         if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
-            console.log("lsvdklsmv")
             return res.status(400).json("Product already exist.")
         }
 

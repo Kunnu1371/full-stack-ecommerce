@@ -4,13 +4,13 @@ const fs = require('fs')
 const _ = require('lodash')
 
 exports.carousalById = (req,res, next, id) => {
-    Carousal.findById(id).exec((err, image) => {
-        if(err || !image) {
+    Carousal.findById(id).exec((err, carousal) => {
+        if(err || !carousal) {
             return res.status(400).json({
                 error: 'Image not found'
             })
         }
-        req.image = image;
+        req.carousal = carousal;
         next();
     })
 }
@@ -53,9 +53,12 @@ exports.create = (req, res) => {
 
 
 exports.read = (req, res, next) => {
-    return res.json(req.image)
+    if(req.carousal.image.data) {
+        res.set('Content-Type', req.carousal.image.contentType)
+        return res.send(req.carousal.image.data)
+    }
+    next();
 }
-
 
 exports.update = (req, res) => {
     let form = new formidable.IncomingForm()
@@ -67,9 +70,9 @@ exports.update = (req, res) => {
             })
         }
 
-        let image = req.image
-        carousal = _.extend(image, fields)
-        
+        let carousal = req.carousal
+        carousal = _.extend(carousal, fields)
+        // console.log("carousal ", carousal)
         if(files.image) { 
             if(files.image.size > 1000000) {
                 return res.status(400).json({
