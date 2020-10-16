@@ -39,9 +39,12 @@ exports.update = (req, res) => {
 } 
 
 exports.addOrderHistory = (req, res, next) => {
-    let histroy = []
-    req.body.order.products.forEach((item) => {
-        histroy.push({
+    let history = []
+
+    
+
+    req.order.product.forEach((item) => {
+        history.push({
             _id: item._id,
             name: item.name,
             description: item.description,
@@ -49,16 +52,16 @@ exports.addOrderHistory = (req, res, next) => {
             quantity: item.quantity,
             transaction_id: req.body.order.transaction_id,
             amount: req.body.order.amount
-        })
+        }) 
     })
 
     User.findOneAndUpdate({_id: req.profile._id}, 
-        {$push: {history:histroy}}, 
+        {$push: {history:history}}, 
         {new: true}, 
         (err, data) => {
             if(err) {
                 return res.status(400).json({
-                    error: "Could not update user purchase histpry"
+                    error: "Could not update user purchase history"
                 })
             }
             next()
