@@ -11,6 +11,7 @@ const productRoutes = require('./routes/product')
 const orderRoutes = require('./routes/order')
 const carousalRoutes = require('./routes/carousal')
 const voucherRoutes = require('./routes/voucher')
+const cartRoutes = require('./routes/cart')
 
 // importing Middlewares
 const morgran = require('morgan')
@@ -36,6 +37,7 @@ app.use('/api', productRoutes)
 app.use('/api', orderRoutes)
 app.use('/api', carousalRoutes)
 app.use('/api', voucherRoutes)
+app.use('/api', cartRoutes)
 
 
 app.listen(3000, () => {

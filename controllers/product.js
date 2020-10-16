@@ -46,7 +46,7 @@ exports.create = (req, res) => {
 
         let product = new Product(fields)
         // console.log(fields.category)
-
+        // console.log(fields)
         if(files.photo) { 
             if(files.photo.size > 1000000) {
                 return res.status(400).json({

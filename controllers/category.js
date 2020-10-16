@@ -91,7 +91,7 @@ exports.fetch = (req, res) => {
             res.status(400).json({
                 error: err
             })
-        }
+        } 
         res.json(data)
     });
 }
