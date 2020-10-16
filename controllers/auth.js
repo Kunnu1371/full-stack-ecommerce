@@ -4,22 +4,30 @@ const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 // const user = require('../models/user')
 
-exports.signup = (req, res) => {
+exports.signup = async (req, res) => {
     console.log(req.body)
-    const user = new User(req.body)
-    user.save((err, user) => {
-        if(err) {
-            return res.status(400).json({
-                err: errorHandler(err)
-            })
-        }
-        user.salt = undefined
-        user.hashed_Password = undefined
-        res.json({
-            user 
-        })
-        console.log(user)
+    const userFound = await User.findOne({email: { $regex: `^${req.body.email}$`, $options: "i" }}, (err, user) => {
+        if(err) return res.json(err)
     })
+    if(userFound) {
+        // console.log("userFound", userFound)
+        return res.json("User with that email exist in database. Please login")
+    } else {
+            const user = new User(req.body)
+            user.save((err, user) => {
+            if(err) {
+                return res.status(400).json({
+                    err: errorHandler(err)
+                })
+            }
+            user.salt = undefined
+            user.hashed_Password = undefined
+            res.json({
+                user 
+            })
+            console.log(user)
+        })
+    }
 } 
 
 exports.signin = (req, res) => { 

@@ -3,22 +3,30 @@ const { errorHandler } = require('../helpers/dbErrorHandler')
 const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 
-exports.signup = (req, res) => {
+exports.signup = async (req, res) => {
     console.log(req.body)
-    const admin = new Admin(req.body)
-    admin.save((err, admin) => {
-        if(err) {
-            return res.status(400).json({
-                err: errorHandler(err)
-            })
-        }
-        admin.salt = undefined
-        admin.hashed_Password = undefined
-        res.json({
-            admin 
-        })
-        console.log(admin)
+    const adminFound = await Admin.findOne({email: { $regex: `^${req.body.email}$`, $options: "i" }}, (err, admin) => {
+        if(err) return res.json(err)
     })
+    if(adminFound) {
+        // console.log("userFound", adminFound)
+        return res.json("User with that email exist in database. Please login")
+    } else {
+            const admin = new Admin(req.body)
+            admin.save((err, admin) => {
+            if(err) {
+                return res.status(400).json({
+                    err: errorHandler(err)
+                })
+            }
+            admin.salt = undefined
+            admin.hashed_Password = undefined
+            res.json({
+                admin 
+            })
+            console.log(admin)
+        })
+    }
 } 
 
 exports.signin = (req, res) => { 
