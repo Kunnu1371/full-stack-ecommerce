@@ -3,14 +3,20 @@ const { ObjectId } = mongoose.Schema;
 
 const OrderSchema = new mongoose.Schema(
   {
-    product: {
+    products: {
       type: Array,
       default: [],
-      required: true
+      required: true,
+      // product: {
+      //   type: ObjectId,
+      //   ref: "Product",
+      //   required: true
+      // }
     },  
-
+    
     transaction_id: {},
     // amount: { type: Number },
+
     address: String,
     
     status: {

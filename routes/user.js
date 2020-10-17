@@ -12,7 +12,6 @@ router.get('/user/:userId', requireSignin, isAuth, isAdmin, read)
 router.put('/user/:userId', requireSignin, isAuth, isAdmin, update)
 router.get('/order/by/user/:userId', requireSignin, isAuth, isAdmin, purchaseHistory)
 
-
 router.param('userId', userById)
 
 module.exports = router;

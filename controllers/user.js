@@ -1,5 +1,6 @@
 const { errorHandler } = require('../helpers/dbErrorHandler');
-const { Order } = require('../models/order');
+const order = require('../models/order');
+const Order = require('../models/order');
 const User = require('../models/user')
 
 exports.userById = (req, res, next, id) => {
@@ -17,6 +18,7 @@ exports.userById = (req, res, next, id) => {
 exports.read = (req, res) => {
     req.profile.hashed_password = undefined
     req.profile.salt = undefined
+    console.log(req.profile)
     return res.json(req.profile)
 }
 
@@ -39,11 +41,11 @@ exports.update = (req, res) => {
 } 
 
 exports.addOrderHistory = (req, res, next) => {
+    console.log("moddleware u ning")
+
     let history = []
 
-    
-
-    req.order.product.forEach((item) => {
+    req.order.products.map((item) => {
         history.push({
             _id: item._id,
             name: item.name,
@@ -55,30 +57,36 @@ exports.addOrderHistory = (req, res, next) => {
         }) 
     })
 
-    User.findOneAndUpdate({_id: req.profile._id}, 
-        {$push: {history:history}}, 
-        {new: true}, 
-        (err, data) => {
-            if(err) {
-                return res.status(400).json({
-                    error: "Could not update user purchase history"
-                })
-            }
+    // User.findOneAndUpdate({_id: req.profile._id}, 
+    //     {$push: {history:history}}, 
+    //     {new: true}, 
+    //     (err, data) => {
+    //         if(err) {
+    //             return res.status(400).json({
+    //                 error: "Could not update user purchase history"
+    //             })
+    //         }
             next()
-    })
+    // })
 }
 
 
 exports.purchaseHistory = (req, res) => {
     Order.find({user: req.profile._id})
     .populate('user', '_id name') 
-    .sort('-created')
-    .exec((err, orders) => {
-        if(err) {
+    .sort('-created') 
+    .exec( async (err, orders) => {
+        if(err) {  
             return res.status(400).json({
                 error: errorHandler(err)
-            })
-        }
-        res.json(orders)
+            })  
+        }    
+        // req.profile.history = orders
+        // await orders.map((order) => {
+        //     req.profile.history.push(order.products)
+        // })
+        // console.log(req.profile.history)
+        // console.log(req.profile.history)
+        res.json({Orders: orders.length, orders})
     })
 }
