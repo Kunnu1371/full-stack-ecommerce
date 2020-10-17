@@ -8,6 +8,8 @@ exports.userSignupValidator = (req, res, next) => {
         min: 4,
         max: 32
     })
+    req.check('phone', 'Phone is required').notEmpty()
+    req.check('phone').isLength({min: 10}).withMessage('Invalid Phone number')
     req.check('password', 'Password is required').notEmpty()
     req.check('password')
     .isLength({ min: 6 })
