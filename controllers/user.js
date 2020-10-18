@@ -15,18 +15,13 @@ exports.userById = (req, res, next, id) => {
 }
 
 exports.read = (req, res) => {
-    
     User.findById(req.profile._id)
-        .populate('history.')
         .exec((err, user) => {
         if(err) return res.status(400).json(err)
         user.hashed_Password = undefined
         user.salt = undefined
-        // console.log(user)
         return res.json(user)
     })
-    // console.log(req.profile)
-    // return res.json(req.profile)
 }
 
 exports.update = (req, res) => {
