@@ -26,13 +26,13 @@ exports.read = (req, res) => {
 exports.create = (req, res) => {
     let form = new formidable.IncomingForm()
     form.keepExtensions = true
+    form.multiples = true
     form.parse(req, async (err, fields, files) => {
         if(err) {
             return res.status(400).json({
                 error: 'Image could not be uploaded'
             })
         }
-
         const { name, description, price, category, subCategoryName, quantity, shipping } = fields
         if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
             return res.status(400).json({
@@ -46,46 +46,95 @@ exports.create = (req, res) => {
 
         let product = new Product(fields)
         // console.log(fields.category)
-        // console.log(fields)
-        if(files.photo) { 
-            if(files.photo.size > 1000000) {
-                return res.status(400).json({
-                    error: "Image should be less than 1mb in size."
-                })
-            }
-            // product.photo.data = fs.readFileSync(files.photo.path)
-            product.photo.data =  files.photo.path
-            product.photo.contentType = files.photo.type
+        // console.log("fields: ", fields)
+    //     console.log(files.photo.length)
 
-            var oldPath = files.photo.path; 
-            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-            var rawData = fs.readFileSync(oldPath) 
-            console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
-          
+        console.log(files, files.photo)
+        if(files == {}) {
+            var upload = 1
+        }
+        else {
+            var upload = 0
+        }
+        console.log(upload)
+        if(upload) {
+            if (files.photo.length == undefined) {
+                if(files.photo.size) { 
+                    if(files.photo.size > 1000000) {
+                        return res.status(400).json({
+                            error: "Image should be less than 1mb in size."
+                        })
+                    }
+                }
+                var array = []
+                var oldPath = files.photo.path; 
+                var newPath = path.join(__dirname, 'uploads') + '/'+ files.photo.name 
+                var rawData = fs.readFileSync(oldPath) 
+                const obj = {
+                    path: newPath,
+                    contentType: files.photo.type
+                } 
+                array.push(obj)
+                product.photo = array;
+            }
+            else {      
+                var array = []
+                files.photo.map(async (photo)=> {
+                    if(photo.size) { 
+                        if(files.photo.size > 1000000) {
+                            return res.status(400).json({
+                                error: "Image should be less than 1mb in size."
+                            })
+                        }
+                    }
+                    
+                    var oldPath = photo.path; 
+                    var newPath = path.join(__dirname, 'uploads') + '/'+ photo.name 
+                    var rawData = fs.readFileSync(oldPath) 
+                    const obj = {
+                        path: newPath,
+                        contentType: photo.type
+                    } 
+                    await array.push(obj)
+                })        
+                product.photo = array;
+            }
+
+        }
+
+        // if(files.photo) { 
+        //     if(files.photo.size > 1000000) {
+        //         return res.status(400).json({
+        //             error: "Image should be less than 1mb in size."
+        //         })
+        //     }
+        //     // product.photo.data = fs.readFileSync(files.photo.path)
+           
+        //     var oldPath = files.photo.path; 
+        //     var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+        //     var rawData = fs.readFileSync(oldPath) 
+        //     console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
+
+        //     product.photo.data = newPath
+        //     product.photo.contentType = files.photo.type
+
             fs.writeFile(newPath, rawData, (err) => { 
                 if(err) console.log(err) 
                 // res.send("Successfully uploaded") 
-            })  
-        }
+            })   
+        // }
 
         // Check if req.category exist or not
         subCategory.findById(fields.category).exec((err, result) => {
-            if(err) {
-                res.status(400).json(err)
-                console.log(id)
-            }
+            if(err) {res.status(400).json(err)}
             // category found
-          if(result) {  
+            if(result) {  
                 product.save((err, result) => {
-                    if(err) {
-                        return res.status(400).json({
-                            error: err
-                        })
-                    }
+                    if(err) { return res.status(400).json({error: err})}
                     res.json({message: "Product created successfully", result})
                 })
             }
-            else{
+            else {
                 return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})
             }
         })  
@@ -112,27 +161,75 @@ exports.update = (req, res) => {
 
         let product = req.product
         product = _.extend(product, fields)
-        
-        if(files.photo) { 
-            if(files.photo.size > 1000000) {
-                return res.status(400).json({
-                    error: "Image should be less than 1mb in size."
-                })
+
+        console.log(files.photo)
+        if(files.photo.name) {
+            if (files.photo.length == undefined) {
+                if(files.photo.size) { 
+                    if(files.photo.size > 1000000) {
+                        return res.status(400).json({
+                            error: "Image should be less than 1mb in size."
+                        })
+                    }
+                }
+                var array = []
+                var oldPath = files.photo.path; 
+                var newPath = path.join(__dirname, 'uploads') + '/'+ files.photo.name 
+                var rawData = fs.readFileSync(oldPath) 
+                const obj = {
+                    path: newPath,
+                    contentType: files.photo.type
+                } 
+                array.push(obj)
+                product.photo = array;
             }
-            // product.photo.data = fs.readFileSync(files.photo.path)
-            product.photo.data = files.photo.path
-            product.photo.contentType = files.photo.type
+            else {      
+                var array = []
+                files.photo.map(async (photo)=> {
+                    if(photo.size) { 
+                        if(files.photo.size > 1000000) {
+                            return res.status(400).json({
+                                error: "Image should be less than 1mb in size."
+                            })
+                        }
+                    }
+                    
+                    var oldPath = photo.path; 
+                    var newPath = path.join(__dirname, 'uploads') + '/'+ photo.name 
+                    var rawData = fs.readFileSync(oldPath) 
+                    const obj = {
+                        path: newPath,
+                        contentType: photo.type
+                    } 
+                    await array.push(obj)
+                })        
+                product.photo = array;
+            }
+    
+           
+        }
+       
+        
+        // if(files.photo) { 
+        //     if(files.photo.size > 1000000) {
+        //         return res.status(400).json({
+        //             error: "Image should be less than 1mb in size."
+        //         })
+        //     }
+        //     // product.photo.data = fs.readFileSync(files.photo.path)
+        //     product.photo.data = files.photo.path
+        //     product.photo.contentType = files.photo.type
             
-            var oldPath = files.photo.path; 
-            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-            var rawData = fs.readFileSync(oldPath) 
-            console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
+        //     var oldPath = files.photo.path; 
+        //     var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+        //     var rawData = fs.readFileSync(oldPath) 
+        //     console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
           
             fs.writeFile(newPath, rawData, (err) => { 
                 if(err) console.log(err) 
                 // res.send("Successfully uploaded") 
             })  
-        }
+        // }
 
 
         // Check if req.category exist or not
