@@ -7,11 +7,6 @@ const OrderSchema = new mongoose.Schema(
       type: Array,
       default: [],
       required: true,
-      // product: {
-      //   type: ObjectId,
-      //   ref: "Product",
-      //   required: true
-      // }
     },  
     
     transaction_id: {},
@@ -24,7 +19,9 @@ const OrderSchema = new mongoose.Schema(
       default: "Pending",
       enum: ["Pending", "Confirmed", "Placed", "Not processed", "Processing", "Shipped", "Delivered", "Cancelled"] // enum means string objects
     },
+
     updated: Date,
+
     user: {
       type: ObjectId,
       ref: "User",
