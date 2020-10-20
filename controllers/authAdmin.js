@@ -64,13 +64,11 @@ exports.signout = (req, res) => {
 exports.requireSignin = expressJwt({
     secret: process.env.JWT_SECRET,
     algorithms: ["HS256"], // added later
-    userProperty: "auth"
+    requestProperty: "auth"
 })
 
 exports.isAuth = (req, res, next) => {
     let user = req.profile && req.auth && req.profile._id == req.auth._id;
-    // console.log("req.auth: ", req.auth, "req.auth._id: ", req.auth._id)
-    // console.log(user)
     if(!user) {
         return res.status(403).json({
             error: "Access Denied"

@@ -2,8 +2,9 @@ const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema
 const voucherSchema = new mongoose.Schema({
     
-    voucherCode: {
+    name: {
         type: String,
+        required: true
     },
 
     amount: {

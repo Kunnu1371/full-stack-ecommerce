@@ -1,5 +1,5 @@
 const Cart = require('../models/cart')
-
+const Voucher = require('../models/voucher')
 // exports.cartById = (req, res, next, id) => {
 //     Cart.findById(id).exec((err, cart) => {
 //         if(err || !cart) {
@@ -61,8 +61,29 @@ exports.getCartTotal = (req, res) => {
         for(var i = 0; i < priceArray.length; i++ ) {
             Total += priceArray[i]
         }
+
+        const voucher = req.body.voucher
+        if(voucher) {
+            Voucher.findOne({name: voucher}).exec((err, voucher) => {
+                if(err || !voucher) {
+                    res.status(400).json({
+                        error: "Invalid voucher"
+                    })
+                }
+                if(voucher) {
+                    if(voucher.isExpired == true || voucher.isActive == false) {
+                        return res.status(200).json({message: "The voucher is no longer active or has been expired"})
+                    } else {
+                        // console.log(voucher.amount)
+                        const updatedTotal = Total - voucher.amount
+                        return res.json({CartTotal: updatedTotal})               
+                    }
+                }
+            })
+        } else {
+            return res.status(200).json({CartTotal: Total})
+        }
         
-        return res.status(200).json({CartTotal: Total})
     })
 }
 
