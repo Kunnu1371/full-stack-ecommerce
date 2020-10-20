@@ -45,6 +45,30 @@ exports.getCartItems = async (req, res) => {
     })
 }
 
+
+exports.getCartTotal = (req, res) => {
+    Cart.find()
+    .populate("product")
+        .exec((err, data) => {
+        if(err) return res.status(400).json(err)
+        const products = data
+        const priceArray = (products.map((product) => {
+            return (product.Quantity * product.product.price)
+        }))
+        // console.log(priceArray)
+        
+        var Total = 0;
+        for(var i = 0; i < priceArray.length; i++ ) {
+            Total += priceArray[i]
+        }
+        
+        return res.status(200).json({CartTotal: Total})
+    })
+}
+
+
+
+
 // Increase quantity of an Item in cart
 exports.Increase = async (req, res) => {
     const productId = req.params.productId
