@@ -1,4 +1,5 @@
 const Cart = require('../models/cart')
+const Wishlist = require('../models/wishlist')
 const Voucher = require('../models/voucher')
 // exports.cartById = (req, res, next, id) => {
 //     Cart.findById(id).exec((err, cart) => {
@@ -163,4 +164,23 @@ exports.deleteCartItems = async (req, res) => {
     else {
         return res.json("Product not present in cart")
     }
+}
+
+
+
+exports.moveToWishlist = async (req, res) => {
+
+    // how move the product from cart to wishlist is working => first delete the product from cart then add the same product in wishlist.
+
+    const product = req.params.productId
+    const productInCart = await Cart.findOne({product: product})
+    await productInCart.remove((err, data) => {
+        if(err) return res.json(err)
+    }) 
+
+    const newProduct = new Wishlist({product: product})
+    await newProduct.save((err, savedProduct) => {
+        if(err) res.status(500).json(err)
+        return res.status(200).json("Product moved to wishlist")
+    })
 }

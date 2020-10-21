@@ -35,7 +35,6 @@ exports.create = (req, res) => {
             history.push(products)
             order.products.push(products)
         })
-        
         const orderCreated = new Order(order) 
         await orderCreated.save(async (err, order) => {
         if(err) {
@@ -43,6 +42,7 @@ exports.create = (req, res) => {
                 error: errorHandler(err)
             })
         }
+     
         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
             if(err) {res.status(400).json(err)}
             // return res.status(201).json(data)

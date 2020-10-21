@@ -1,9 +1,12 @@
 const fs = require('fs')
 var easyinvoice = require('easyinvoice');
- 
+const Order = require('./models/order')
+
+const id = req.params.id
+
+
 var data = {
-    //"documentTitle": "RECEIPT", //Defaults to INVOICE
-    "currency": "USD",
+    "currency": "INR",
     "taxNotation": "vat", //or gst
     "marginTop": 25,
     "marginRight": 25,
@@ -12,14 +15,11 @@ var data = {
     "logo": "https://www.easyinvoice.cloud/img/logo.png", //or base64
     //"logoExtension": "png", //only when logo is base64
     "sender": {
-        "company": "Sample Corp",
+        "company": "Smartaxom",
         "address": "Sample Street 123",
         "zip": "1234 AB",
         "city": "Sampletown",
         "country": "Samplecountry"
-        //"custom1": "custom value 1",
-        //"custom2": "custom value 2",
-        //"custom3": "custom value 3"
     },
     "client": {
        	"company": "Client Corp",
@@ -27,9 +27,6 @@ var data = {
        	"zip": "4567 CD",
        	"city": "Clientcity",
        	"country": "Clientcountry"
-        //"custom1": "custom value 1",
-        //"custom2": "custom value 2",
-        //"custom3": "custom value 3"
     },
     "invoiceNumber": "2020.0001",
     "invoiceDate": "05-01-2020",
