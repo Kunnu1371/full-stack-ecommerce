@@ -46,6 +46,16 @@
         <li>Get cart total</li>
     </ul>
 
+<li>Wishlist</li>
+    <ul>
+        <li>Add Products</li>
+        <li>Remove producs</li>
+        <li>Get wishlist products</li>
+    </ul>
+
+<li>Move Items from Wishlist to Cart or vice-versa</li>
+
+
 <li>Voucher</li>
     <ul>
         <li>CRUD voucher by Admin</li>
