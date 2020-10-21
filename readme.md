@@ -63,6 +63,8 @@
         <li>Modify order by Admin</li>
         <li>Get user's order history</li>
         <li>Get user's purchase history</li>
+        <li>Get number of orders by Admin based on order status, orders placed today or till now</li>
+        <li>Get total users by Admin</li>
     </ul>
 
 <li>Invoice feature</li>
