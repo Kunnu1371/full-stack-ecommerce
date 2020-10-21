@@ -91,3 +91,39 @@ exports.updateOrderStatus = async (req, res) => {
                     res.json({message: "Status changed successfully", order})
                 })
 }
+
+exports.TotalOrders = async (req, res) => {
+    const ordersTillNow = await Order.countDocuments()
+    var start = new Date();
+    start.setHours(0,0,0,0);
+    var end = new Date();
+    end.setHours(23,59,59,999);
+    const ordersToday = await Order.find( {createdAt: { "$gte": start, "$lt": end }}).countDocuments()
+    const Pending = await Order.find({status: "Pending"}).countDocuments()
+    const Confirmed = await Order.find({status: "Confirmed"}).countDocuments()
+    const Placed = await Order.find({status: "Placed"}).countDocuments()
+    const NotProcessed = await Order.find({status: "Not Processed"}).countDocuments()
+    const Processing = await Order.find({status: "Processing"}).countDocuments()
+    const Shipped = await Order.find({status: "Shipped"}).countDocuments()
+    const Delivered = await Order.find({status: "Delivered"}).countDocuments()
+    const Cancelled = await Order.find({status: "Cancelled"}).countDocuments()
+
+    const orders = {
+        TotalOrders: ordersTillNow, 
+        TotalOrderToday: ordersToday,
+        Pending: Pending,
+        Confirmed: Confirmed,
+        Placed: Placed,
+        NotProcessed: NotProcessed,
+        Processing: Processing,
+        Shipped: Shipped,
+        Delivered: Delivered,
+        Cancelled: Cancelled
+    }
+    res.status(200).json(orders)
+}
+
+exports.TotalUsers = async (req, res) => {
+    const users = await User.countDocuments()
+    res.json({TotalUsers: users})
+}

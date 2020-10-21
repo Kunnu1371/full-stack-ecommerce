@@ -1,17 +1,21 @@
 const express = require('express')
 const router = express.Router()
 
-const  { requireSignin, isAuth, isAdmin}  = require('../controllers/authAdmin')
+const  { requireSignin, isAuth, isAdmin }  = require('../controllers/authAdmin')
 const  { userById }  = require('../controllers/user')
-const  { create, listOrders, updateOrderStatus, orderById, getOrderDetail }  = require('../controllers/order')
+const { adminById } = require('../controllers/admin')
+const  { create, listOrders, updateOrderStatus, orderById, getOrderDetail, TotalOrders, TotalUsers }  = require('../controllers/order')
 const { decreaseQuantity } = require('../controllers/product')
 
 router.post('/order/create/:userId', requireSignin, isAuth, create)
 router.get('/order/list/:userId', requireSignin, isAuth, listOrders)
 router.get('/order/:orderId/:userId', requireSignin, isAuth, getOrderDetail)
-router.put('/order/:orderId/status/:userId', requireSignin, isAuth, isAdmin, updateOrderStatus)
+router.put('/order/:orderId/status/:adminId', requireSignin, isAuth, isAdmin, updateOrderStatus)
+router.get('/orders/total/:adminId', requireSignin, isAdmin, isAuth, TotalOrders)
+router.get('/users/total/:adminId', requireSignin, isAdmin, isAuth, TotalUsers)
 
 router.param('userId', userById)
+router.param('adminId', adminById)
 router.param('orderId', orderById)
 
 module.exports = router;
