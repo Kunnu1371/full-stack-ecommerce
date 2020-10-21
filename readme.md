@@ -1,19 +1,4 @@
  # This e-commerce API includes:
-
-<style>
-    body{
-        font-family: Verdana, sans-serif;
-    }
-
-    ul {
-        list-style-type: square
-    }
-
-    ol li {
-        font-weight: 530
-    }
-</style>
-
 <ol>
 <li >Admin Panel</li>
     <ul>
