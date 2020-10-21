@@ -56,13 +56,13 @@
 <li>Orders</li>
      <ul>
         <li>Creation of Order after checkout</li>
-        <li>Push orders in user's history</li>
+        <li>Show orders in user's history</li>
         <li>Get order status</li>
         <li>Get order details</li>
          <li>Get order list </li>
-        <li>Modify order by Admin</li>
+        <li>Update order status by Admin</li>
         <li>Get user's order history</li>
-        <li>Get user's purchase history</li>
+        <li>Get user's purchase history by Admin</li>
         <li>Get number of orders by Admin based on order status, orders placed today or till now</li>
         <li>Get total users by Admin</li>
     </ul>
