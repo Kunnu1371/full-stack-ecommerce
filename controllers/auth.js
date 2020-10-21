@@ -2,7 +2,6 @@ const User = require('../models/user')
 const { errorHandler } = require('../helpers/dbErrorHandler')
 const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
-// const user = require('../models/user')
 
 exports.signup = async (req, res) => {
     console.log(req.body)
@@ -75,15 +74,6 @@ exports.isAuth = (req, res, next) => {
     if(!user) {
         return res.status(403).json({
             error: "Access Denied"
-        })
-    }
-    next();
-}
-
-exports.isAdmin = (req, res, next) => {
-    if(req.profile.role === 0) {
-        return res.status(403).json({
-            error: "Admin resource. Access Denied"
         })
     }
     next();
