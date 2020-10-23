@@ -25,14 +25,13 @@ exports.read = (req, res) => {
 
 
 exports.create = (req, res) => {
+
     let form = new formidable.IncomingForm()
     form.keepExtensions = true
+    form.multiples = true
+
     form.parse(req, async (err, fields, files) => {
-        if(err) {
-            return res.status(400).json({
-                error: 'Image could not be uploaded'
-            })
-        }
+        if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
 
         const { name, description, price, category, subCategoryName, quantity, shipping } = fields
         if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
@@ -46,122 +45,219 @@ exports.create = (req, res) => {
         }
 
         let product = new Product(fields)
-        // console.log(fields.category)
-        // console.log(fields)
-        if(files.photo) { 
-            if(files.photo.size > 1000000) {
-                return res.status(400).json({
-                    error: "Image should be less than 1mb in size."
-                })
-            }
-            // product.photo.data = fs.readFileSync(files.photo.path)
-            
-            var oldPath = files.photo.path; 
-            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-            var rawData = fs.readFileSync(oldPath) 
-            product.photo.data =  newPath
-            product.photo.contentType = files.photo.type
 
-            // console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
-          
-            fs.writeFile(newPath, rawData, (err) => { 
-                if(err) console.log(err) 
-                // res.send("Successfully uploaded") 
-            })  
-        }
-
-        // Check if req.category exist or not
-        subCategory.findById(fields.category).exec((err, result) => {
-            if(err) {
-                res.status(400).json(err)
-                console.log(id)
-            }
-            // category found
-          if(result) {  
-                product.save((err, result) => {
-                    if(err) {
-                        return res.status(400).json({
-                            error: err
-                        })
+        if(files.photo) {
+            if(files.photo.path == undefined) {
+                var filePath = []
+                let doUpload = 1
+                files.photo.map((files) => {
+                    if(files.size > 1*1024*1024) { 
+                        doUpload = 0
+                        return res.status(400).json({error: "Image should be less than 1mb in size."})}  
+    
+                        var oldPath = files.path; 
+                        var newPath = path.join(__dirname, 'uploads') + '/'+files.name 
+                        var rawData = fs.readFileSync(oldPath) 
+                        const obj = {
+                            data: newPath,
+                            contentType: files.type
+                        }
+                        filePath.push(obj)
+                        fs.writeFile(newPath, rawData, (err) => { 
+                            if(err) console.log(err) 
+                        })  
+                    })
+                    if(doUpload == 1) {
+                        subCategory.findById(fields.category).exec((err, result) => {
+                            if(err) {res.status(500).json(err)}
+                            // category found
+                        if(result) {  
+                                product.save((err, result) => {
+                                    if(err) {return res.status(500).json({error: err})}
+                                    Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
+                                        if(err) return res.status(500).json(err)
+                                        console.log(filePath)
+                                        return res.status(201).json({message: "Product created successfully", Product})
+                                    })
+                                    // return res.status(201).json({message: "Product created successfully", result})
+                                })
+                            }
+                            else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                        }) 
                     }
-                    res.json({message: "Product created successfully", result})
-                })
-            }
-            else{
-                return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})
-            }
-        })  
-    })
-}
-
-
-exports.update = (req, res) => {
-    let form = new formidable.IncomingForm()
-    form.keepExtensions = true
-    form.parse(req, (err, fields, files) => {
-        if(err) {
-            return res.status(400).json({
-                error: 'Image could not be uploaded'
-            })
-        }
-
-        const { name, description, price, category, subCategoryName, quantity, shipping } = fields
-        if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
-            return res.status(400).json({
-                error: "All fields are required."
-            })
-        }
-
-        let product = req.product
-        product = _.extend(product, fields)
+                }
+                else {
+                    var filePath = [],
+                    doUpload = 1
+                    if(files.photo.size > 1*1024*1024) {
+                    doUpload = 0
+                    return res.status(400).json({error: "Image should be less than 1mb in size."})}       
         
-        if(files.photo) { 
-            if(files.photo.size > 1000000) {
-                return res.status(400).json({
-                    error: "Image should be less than 1mb in size."
-                })
+                    var oldPath = files.photo.path; 
+                    var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+                    var rawData = fs.readFileSync(oldPath) 
+                    const obj = {
+                        data: newPath,
+                        contentType: files.photo.type
+                    }  
+                    filePath.push(obj)         
+                    fs.writeFile(newPath, rawData, (err) => { 
+                        if(err) console.log(err) 
+                    })   
+                    if(doUpload == 1) {
+                        subCategory.findById(fields.category).exec((err, result) => {
+                            if(err) {res.status(500).json(err)}
+                            // category found
+                        if(result) {  
+                                product.save((err, result) => {
+                                    if(err) {return res.status(500).json({error: err})}
+                                    Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
+                                        if(err) return res.status(500).json(err)
+                                        console.log(filePath)
+                                        return res.status(201).json({message: "Product created successfully", Product})
+                                    })
+                                    // return res.status(201).json({message: "Product created successfully", result})
+                                })
+                            }
+                            else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                        }) 
+                    }
+                }
             }
-            // product.photo.data = fs.readFileSync(files.photo.path)
-            var oldPath = files.photo.path; 
-            var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-            var rawData = fs.readFileSync(oldPath) 
-            product.photo.data = newPath
-            product.photo.contentType = files.photo.type
-            
-           
-            // console.log("oldPath = ", oldPath,"rawData = ", rawData,"newPath = ", newPath)
-          
-            fs.writeFile(newPath, rawData, (err) => { 
-                if(err) console.log(err) 
-                // res.send("Successfully uploaded") 
-            })  
-        }
-
-
-        // Check if req.category exist or not
-        subCategory.findById(fields.category).exec((err, result) => {
-            if(err) {
-                res.status(400).json()
-                console.log(id)
-            }
-            // category found
-          if(result) {
-                product.save((err, result) => {
-                    if(err) {
-                        return res.status(400).json({
-                            error: err
+            else {
+                subCategory.findById(fields.category).exec((err, result) => {
+                    if(err) {res.status(500).json(err)}
+                    // category found
+                if(result) {  
+                        product.save((err, result) => {
+                            if(err) {return res.status(500).json({error: err})}
+                            return res.status(201).json({message: "Product created successfully", result})
                         })
                     }
-                    res.json({message: "Product updated successfully", result})
-                })
-            }
-            else{
-                return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})
+                    else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                }) 
             }
         })
+    }
+
+
+
+    
+    exports.update = (req, res) => {
+
+        let form = new formidable.IncomingForm()
+        form.keepExtensions = true
+        form.multiples = true
+    
+        form.parse(req, async (err, fields, files) => {
+            if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
+    
+            const { name, description, price, category, subCategoryName, quantity, shipping } = fields
+            if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
+                return res.status(400).json({
+                    error: "All fields are required."
+                })
+            }
+
+            let product = req.product
+            product = _.extend(product, fields)    
+
+            if(files.photo) {
+                if(files.photo.path == undefined) {
+                    var filePath = []
+                    let doUpload = 1
+                    files.photo.map((files) => {
+                        if(files.size > 1*1024*1024) { 
+                            doUpload = 0
+                            return res.status(400).json({error: "Image should be less than 1mb in size."})}  
         
-    })
-}
+                            var oldPath = files.path; 
+                            var newPath = path.join(__dirname, 'uploads') + '/'+files.name 
+                            var rawData = fs.readFileSync(oldPath) 
+                            const obj = {
+                                data: newPath,
+                                contentType: files.type
+                            }
+                            filePath.push(obj)
+                            fs.writeFile(newPath, rawData, (err) => { 
+                                if(err) console.log(err) 
+                            })  
+                        })
+                        if(doUpload == 1) {
+                            subCategory.findById(fields.category).exec((err, result) => {
+                                if(err) {res.status(500).json(err)}
+                                // category found
+                            if(result) {  
+                                    product.save((err, result) => {
+                                        if(err) {return res.status(500).json({error: err})}
+                                        Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
+                                            if(err) return res.status(500).json(err)
+                                            console.log(filePath)
+                                            return res.status(201).json({message: "Product updated successfully", updated})
+                                        })
+                                        // return res.status(201).json({message: "Product updated successfully", result})
+                                    })
+                                }
+                                else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                            }) 
+                        }
+                    }
+                    else {
+                        var filePath = [],
+                        doUpload = 1
+                        if(files.photo.size > 1*1024*1024) {
+                        doUpload = 0
+                        return res.status(400).json({error: "Image should be less than 1mb in size."})}       
+            
+                        var oldPath = files.photo.path; 
+                        var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
+                        var rawData = fs.readFileSync(oldPath)  
+                        const obj = {
+                            data: newPath,
+                            contentType: files.photo.type
+                        }  
+                        filePath.push(obj) 
+                        fs.writeFile(newPath, rawData, (err) => { 
+                            if(err) console.log(err) 
+                        })  
+                        if(doUpload == 1) {
+                            subCategory.findById(fields.category).exec((err, result) => {
+                                if(err) {res.status(500).json(err)}
+                                if(result) {  
+                                    product.save((err, result) => {
+                                        if(err) {
+                                            console.log("error: ", err)
+                                            return res.status(500).json({error: err})
+                                        }
+                                        Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
+                                            if(err) {return res.status(500).json(err)}
+                                            return res.status(201).json({message: "Product updated successfully", updated})
+                                        })
+                                        // return res.status(201).json({message: "Product created successfully", result})
+                                    })
+                                }
+                                else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                            }) 
+                        }
+                    }
+                }
+                else {
+                    subCategory.findById(fields.category).exec((err, result) => {
+                        if(err) {res.status(500).json(err)}
+                        // category found
+                    if(result) {  
+                            product.save((err, updated) => {
+                                if(err) {return res.status(500).json({error: err})}
+                                return res.status(201).json({message: "Product updated successfully", updated})
+                            })
+                        }
+                        else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                    }) 
+                }
+            })
+        }
+          
+            
 
 
 exports.remove = (req, res) => {
