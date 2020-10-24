@@ -71,10 +71,11 @@
         <li>Get order details</li>
          <li>Get order list </li>
         <li>Update order status by Admin</li>
-        <li>Get user's order history</li>
+        <li>Get user's order history by user</li>
         <li>Get user's purchase history by Admin</li>
         <li>Get number of orders by Admin based on order status, orders placed today or till now</li>
         <li>Get total users by Admin</li>
+        <li>Update product Quantity and sold while placing order(s)</li>
     </ul>
 
 <li>Invoice feature</li>
