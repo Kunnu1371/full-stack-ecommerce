@@ -22,6 +22,7 @@ exports.signup = async (req, res) => {
             user.salt = undefined
             user.hashed_Password = undefined
             res.json({
+                status: "success",
                 user 
             })
             console.log(user)
@@ -47,7 +48,8 @@ exports.signin = (req, res) => {
         const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET)
         res.cookie('t', token, { expire: new Date() + 9999})
         const {_id, name, email, role} = user
-        return res.json({  token,
+        return res.json({  status: "success",
+                            token,
                             user: {_id, email, name, role}
                         })
     })

@@ -11,7 +11,7 @@ router.post('/cart/:productId/update/decrease', Decrease)
 router.put('/cart/:productId/update', Update)
 router.delete('/cart/:productId/remove', deleteCartItems)
 router.post('/cart/cartTotal', getCartTotal)
-router.delete('/cart/delete', deleteAllItems)
+router.delete('/cart/remove', deleteAllItems)
 router.post('/cart/:productId/move-to-wishlist', moveToWishlist)
 
 router.param('productId', productById)

@@ -5,7 +5,6 @@ const  { requireSignin, isAuth, isAdmin }  = require('../controllers/authAdmin')
 const  { userById }  = require('../controllers/user')
 const { adminById } = require('../controllers/admin')
 const  { create, updateOrderStatus, orderById, getOrderDetail, TotalOrders, TotalUsers }  = require('../controllers/order')
-const { decreaseQuantity } = require('../controllers/product')
 
 router.post('/order/create/:userId', requireSignin, isAuth, create)
 router.get('/order/:orderId/:userId', requireSignin, isAuth, getOrderDetail)

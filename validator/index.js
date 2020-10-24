@@ -1,6 +1,6 @@
 const expressValidator = require('express-validator')
 exports.userSignupValidator = (req, res, next) => {
-    // req.check('name', 'Name is required').notEmpty()
+    req.check('name', 'Name is required').notEmpty()
     req.check('email', 'Email must be between 3 to 32 vharacters')
     .matches(/.+\@.+\..+/)
     .withMessage('Email must contain @')

@@ -4,24 +4,24 @@ const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 
 exports.signup = async (req, res) => {
-    console.log(req.body)
     const adminFound = await Admin.findOne({email: { $regex: `^${req.body.email}$`, $options: "i" }}, (err, admin) => {
-        if(err) return res.json(err)
+        if(err) return res.status(500).json(err)
     })
     if(adminFound) {
         // console.log("userFound", adminFound)
-        return res.json("User with that email exist in database. Please login")
+        return res.json("Admin with that email exist in database. Please login")
     } else {
             const admin = new Admin(req.body)
             admin.save((err, admin) => {
             if(err) {
-                return res.status(400).json({
+                return res.status(500).json({
                     err: errorHandler(err)
                 })
             }
             admin.salt = undefined
             admin.hashed_Password = undefined
             res.json({
+                status: "success",
                 admin 
             })
             console.log(admin)
@@ -47,7 +47,8 @@ exports.signin = (req, res) => {
         const token = jwt.sign({_id: admin._id}, process.env.JWT_SECRET)
         res.cookie('t', token, { expire: new Date() + 9999})
         const {_id, name, email, role} = admin
-        return res.json({  token,
+        return res.json({   status: "success",
+                            token,
                             admin: {_id, email, name, role}
                         })
     })
