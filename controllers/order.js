@@ -2,6 +2,7 @@ const Order =  require('../models/order')
 const Cart =  require('../models/cart')
 const {errorHandler} = require('../helpers/dbErrorHandler')
 const User = require('../models/user')
+const { result } = require('lodash')
 
 exports.orderById = (req, res, next, id) => {
     Order.findById(id)
@@ -18,7 +19,8 @@ exports.orderById = (req, res, next, id) => {
 }
 
 
-exports.create = (req, res) => {
+
+exports.create = async (req, res) => {
     const order = {
         user: req.profile,
         products: [],
@@ -28,30 +30,47 @@ exports.create = (req, res) => {
     order.user.hashed_Password = undefined
 
     let history = []
-    Cart.find().exec(async (err, products) => { 
-    if(err) { return res.json(err) }
-    else {
-        await products.map((products) => {
-            history.push(products)
-            order.products.push(products)
-        })
-        const orderCreated = new Order(order) 
-        await orderCreated.save(async (err, order) => {
-        if(err) {
-            return res.status(400).json({
-                error: errorHandler(err)
+
+    Cart.countDocuments().exec((err, result) => {
+        if(err) return res.json(err)
+        console.log("result: ", result)
+        if(result) {
+            Cart.find().exec(async (err, products) => { 
+                if(err) { return res.json(err) }
+                else {
+                    await products.map((products) => {
+                        history.push(products)
+                        order.products.push(products)
+                    })
+                    
+                    const orderCreated = new Order(order) 
+                    await orderCreated.save(async (err, order) => {
+                        if(err) {
+                            return res.status(400).json({
+                                error: errorHandler(err)
+                            })
+                        }
+                    
+                        // It clears cart after order placed
+                        await Cart.deleteMany({}, (err, result) => {
+                            if(err) return res.status(500).json(err)
+                        })
+                        
+                        // It push the order(s) in User's purchasing history
+                        User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
+                            if(err) {res.status(400).json(err)}
+                            // return res.status(201).json(data)
+                        })
+                        order.user.history = undefined
+                        return res.status(201).json(order)
+                    })
+                }
             })
         }
-     
-        User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
-            if(err) {res.status(400).json(err)}
-            // return res.status(201).json(data)
-        })
-        order.user.history = undefined
-        return res.status(201).json(order)
+        else {
+            return res.json("Cannot place order, cart is empty. ")
+        }
     })
-    }
-})
 }
 
 

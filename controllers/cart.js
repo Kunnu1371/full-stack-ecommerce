@@ -77,7 +77,7 @@ exports.getCartTotal = (req, res) => {
                     } else {
                         // console.log(voucher.amount)
                         const updatedTotal = Total - voucher.amount
-                        return res.json({CartTotal: updatedTotal})               
+                        return res.status(200).json({CartTotal: updatedTotal})               
                     }
                 }
             })
@@ -107,7 +107,7 @@ exports.Increase = async (req, res) => {
     } 
 
     else {
-        console.log(productId, productInCart)
+        // console.log(productId, productInCart)
         return res.json("product not present in cart")
     }
 } 
@@ -137,7 +137,7 @@ exports.Decrease = async (req, res) => {
     } 
 
     else {
-        return res.json("product not present in cart")
+        return res.json("product not found in cart")
     }
 }
 
@@ -162,11 +162,34 @@ exports.deleteCartItems = async (req, res) => {
         })
     }
     else {
-        return res.json("Product not present in cart")
+        return res.json("Product not found in cart")
     }
 }
 
 
+exports.Update = async (req, res) => {
+    const product = req.params.productId
+    const quantity = req.body.quantity
+    const productInCart = await Cart.findOne({product: product})
+    if(productInCart) {
+        // console.log(productInCart)
+        productInCart.Quantity = quantity
+
+        productInCart.save((err, updated) => {
+            if(err) return res.status(500).json(err)
+            return res.json({message: "product quantity updated", updated})
+        })
+    } else {
+        return res.json("Product not found in Cart")
+    }
+}
+
+exports.deleteAllItems = async (req, res) => {
+    await Cart.deleteMany({}, (err, result) => {
+        if(err) return res.status(500).json(err)
+        return res.status(200).json("All items in cart has been deleted")
+    })
+}
 
 exports.moveToWishlist = async (req, res) => {
 
