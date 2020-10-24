@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+
 const  { requireSignin, isAdmin, isAuth}  = require('../controllers/authAdmin')
 const  { adminById, read, update }  = require('../controllers/admin')
 const { userById, purchaseHistory } = require('../controllers/user')

@@ -2,7 +2,7 @@ const Order =  require('../models/order')
 const Cart =  require('../models/cart')
 const {errorHandler} = require('../helpers/dbErrorHandler')
 const User = require('../models/user')
-const { result } = require('lodash')
+const  { decreaseQuantity } = require('../controllers/product')
 
 exports.orderById = (req, res, next, id) => {
     Order.findById(id)
@@ -19,7 +19,6 @@ exports.orderById = (req, res, next, id) => {
 }
 
 
-
 exports.create = async (req, res) => {
     const order = {
         user: req.profile,
@@ -31,6 +30,7 @@ exports.create = async (req, res) => {
 
     let history = []
 
+    // Before placing order it will check cart is empty or not. If cart is empty a message will return "Cannot place order, cart is empty. "
     Cart.countDocuments().exec((err, result) => {
         if(err) return res.json(err)
         console.log("result: ", result)
@@ -51,10 +51,13 @@ exports.create = async (req, res) => {
                             })
                         }
                     
+                        await decreaseQuantity()
+
                         // It clears cart after order placed
                         await Cart.deleteMany({}, (err, result) => {
                             if(err) return res.status(500).json(err)
                         })
+                        
                         
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
@@ -74,18 +77,19 @@ exports.create = async (req, res) => {
 }
 
 
-exports.listOrders = (req, res) => {
+exports.OrderHistory = (req, res) => {
     Order.find({user: req.params.userId})
     .sort('-created')
     .exec((err, order) => {
         if(err) {
             return res.status(400).json({
-                error: "Coudnot find order"
+                error: "Couldn't find order"
             })
         }
         return res.status(200).json({Orders: order.length, order})
     }) 
 }
+
 
 exports.getOrderDetail = (req, res) => {
     // console.log(req.order, req.order._id)
@@ -94,7 +98,7 @@ exports.getOrderDetail = (req, res) => {
          .exec((err, data) => {
              if(err) return res.status(400).json(err)
              return res.json(data)
-         })
+        })
 }
 
 
@@ -110,6 +114,7 @@ exports.updateOrderStatus = async (req, res) => {
                     res.json({message: "Status changed successfully", order})
                 })
 }
+
 
 exports.TotalOrders = async (req, res) => {
     const ordersTillNow = await Order.countDocuments()
@@ -141,6 +146,7 @@ exports.TotalOrders = async (req, res) => {
     }
     res.status(200).json(orders)
 }
+
 
 exports.TotalUsers = async (req, res) => {
     const users = await User.countDocuments()

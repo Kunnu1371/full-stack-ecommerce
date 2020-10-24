@@ -437,23 +437,17 @@ exports.photo  = (req, res, next) => {
 }
 
 
-
-exports.decreaseQuantity = (req, res, next) => {
-    let bulkOps = req.body.order.products.map((item) => {
-        return {
-            updateOne: {
-                filter: {_id: item._id},
-                update: {$inc: {quantity: -item.count, sold: +item.count}}
-            }
-        }
-    })
-
-    Product.bulkWrite(bulkOps, {}, (error, products) => {
-        if(error) {
-            return res.status(400).json({
-                error: "Could not update product"
+const Cart = require('../models/cart')
+exports.decreaseQuantity = async (req, res) => {
+    await Cart.find().exec((err, cart) => {
+        if(err) { return res.json(err)}
+        cart.map(async (product) => {
+            const productQuantityInCart = product.Quantity
+            console.log(productQuantityInCart)
+            await Product.findOneAndUpdate({_id: product.product}, {$inc: { quantity: -productQuantityInCart, sold: +productQuantityInCart }}, {new: true}).exec((err, results) => {
+                if(err) {return res.json("Cannot update quantity")}
+                console.log("Successfully updated", results.quantity)
             })
-        }
-       next()
+        })
     })
 }

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
-const authRoutes = require('./routes/auth')
+const authRoutes = require('./routes/authUser')
 const authAdminRoutes = require('./routes/authAdmin')
 const userRoutes = require('./routes/user')
 const adminRoutes = require('./routes/admin')
@@ -40,7 +40,6 @@ app.use('/api', carousalRoutes)
 app.use('/api', voucherRoutes)
 app.use('/api', cartRoutes)
 app.use('/api', wishListRoutes)
-
 
 app.listen(3000, () => {
     console.log(`Server started on port 3000`)
