@@ -3,7 +3,7 @@ const subCategory = require('../models/subCategory')
 exports.voucherById = (req, res, next, id) => {
     Voucher.findById(id).exec((err, voucher) => {
         if(err || !voucher) {
-            res.status(400).json({
+            res.status(404).json({
                 error: "Voucher not found"
             })
         }
@@ -16,17 +16,16 @@ exports.create = async (req, res) => {
 
     const { name, amount, id} = req.body
     if(!name || !amount || !id) {
-        return res.json("All fields are required.")
+        return res.status(400).json("All fields are required.")
     }
     // Here id is the _id of Category or subCategory for which the voucher is created.
     await subCategory.findById(id).exec((err, result) => {
         if(err) {
-            return res.status(400).json({error: err})
+            return res.status(500).json({error: err})
         }
         if(result) {
             const voucherObj  = {
                 name: req.body.name,
-                // voucherCode: voucherCode,
                 amount: req.body.amount,
                 voucherCategory: req.body.id,
                 expiryDate: Date.now() + 1000
@@ -35,14 +34,18 @@ exports.create = async (req, res) => {
             const voucher = new Voucher(voucherObj)
             voucher.save((err, createdVoucher) => {
                 if(err) {
-                    return res.status(400).json({error: err})
+                    return res.status(500).json({error: err})
                 }
                 // console.log(createdVoucher)
-                return res.json(createdVoucher)
+                return res.status(201).json({
+                    status: "success",
+                    message: "voucher created successfully",
+                    createdVoucher
+                })
             }) 
         }
         else{
-            return res.status(400).json({ message: "Cannot create voucher as it's Sub-Category/Category doesn't exist"})
+            return res.status(404).json({message: "Cannot create voucher as it's Sub-Category/Category doesn't exist"})
         }
     })
 }
@@ -52,7 +55,10 @@ exports.read = (req, res) => {
            .populate('voucherCategory', '_id name category CategoryName')        
            .exec((err, voucher) => {
                 if(err) return res.status(400).json(err)
-                return res.json(voucher)
+                return res.status(200).json({
+                    status: "success",
+                    voucher
+                })
             })
 }
 
@@ -62,8 +68,12 @@ exports.update = (req, res) => {
         {$set: req.body}, 
         {new: true},
     ).exec((err, updated) => {
-        if(err) return res.status(400).json(err)
-        return res.json({message: "Voucher updated successfully", updated})
+        if(err) return res.status(500).json(err)
+        return res.status(200).json({
+            status: "success",
+            message: "Voucher updated successfully", 
+            updated
+        })
     })
 }
 
@@ -71,7 +81,10 @@ exports.update = (req, res) => {
 exports.remove = (req, res) => {
     const voucher = req.voucher
     voucher.remove((err, removed) => {
-        if(err) return res.json(err)
-        return res.json("Voucher deleted")
+        if(err) return res.status(500).json(err)
+        return res.status(200).json({
+            status: "success",
+            message: "Voucher deleted successfully"
+        })
     }) 
 }

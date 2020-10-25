@@ -4,7 +4,7 @@ const Admin = require('../models/admin')
 exports.adminById = (req, res, next, id) => {
     Admin.findById(id).exec((err, admin) => {
         if(err || !admin) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: "Admin not found"
             })
         }
@@ -14,9 +14,10 @@ exports.adminById = (req, res, next, id) => {
 }
 
 exports.read = (req, res) => {
-    req.profile.hashed_password = undefined
-    req.profile.salt = undefined
-    return res.json(req.profile)
+    const profile = req.profile 
+    profile.hashed_password = undefined
+    profile.salt = undefined
+    return res.status(200).json({ status: "success", profile})
 }
 
 exports.update = (req, res) => {
@@ -30,8 +31,6 @@ exports.update = (req, res) => {
                     error: 'You are not authorized to perform this action'
                 })
             }
-            // user.hashed_password = undefined
-            // user.profile.salt = undefined
-            res.json(admin)
+            res.status(200).json({status: "success", admin})
         })
 }

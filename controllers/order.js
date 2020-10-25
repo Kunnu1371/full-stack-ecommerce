@@ -8,7 +8,7 @@ exports.orderById = (req, res, next, id) => {
     Order.findById(id)
     .exec((err, order) => {
         if(err || !order) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: "Order Not found"
             })
         }
@@ -32,11 +32,11 @@ exports.create = async (req, res) => {
 
     // Before placing order it will check cart is empty or not. If cart is empty a message will return "Cannot place order, cart is empty. "
     Cart.countDocuments().exec((err, result) => {
-        if(err) return res.json(err)
+        if(err) return res.status(500).json(err)
         console.log("result: ", result)
         if(result) {
             Cart.find().exec(async (err, products) => { 
-                if(err) { return res.json(err) }
+                if(err) { return res.status(500).json(err) }
                 else {
                     await products.map((products) => {
                         history.push(products)
@@ -46,7 +46,7 @@ exports.create = async (req, res) => {
                     const orderCreated = new Order(order) 
                     await orderCreated.save(async (err, order) => {
                         if(err) {
-                            return res.status(400).json({
+                            return res.status(500).json({
                                 error: errorHandler(err)
                             })
                         }
@@ -61,17 +61,21 @@ exports.create = async (req, res) => {
                         
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
-                            if(err) {res.status(400).json(err)}
+                            if(err) {res.status(500).json(err)}
                             // return res.status(201).json(data)
                         })
                         order.user.history = undefined
-                        return res.status(201).json(order)
+                        return res.status(201).json({
+                            status: "success",
+                            message: "Order created successfully",
+                            order
+                        })
                     })
                 }
             })
         }
         else {
-            return res.json("Cannot place order, cart is empty. ")
+            return res.status(400).json("Cannot place order, cart is empty. ")
         }
     })
 }
@@ -82,11 +86,15 @@ exports.OrderHistory = (req, res) => {
     .sort('-created')
     .exec((err, order) => {
         if(err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 error: "Couldn't find order"
             })
         }
-        return res.status(200).json({Orders: order.length, order})
+        return res.status(200).json({
+            status: "success",
+            Orders: order.length, 
+            order
+        })
     }) 
 }
 
@@ -96,8 +104,11 @@ exports.getOrderDetail = (req, res) => {
     Order.findById(req.order._id)
          .populate('user', 'name email role createdAt updatedAt')
          .exec((err, data) => {
-             if(err) return res.status(400).json(err)
-             return res.json(data)
+             if(err) return res.status(500).json(err)
+             return res.status(200).json({
+                status: "success",
+                data
+            })
         })
 }
 
@@ -107,11 +118,15 @@ exports.updateOrderStatus = async (req, res) => {
                 { $set: {status: req.body.status}},
                 (err, order) => {
                     if(err) {
-                        return res.status(400).json({
+                        return res.status(500).json({
                             error: errorHandler(err)
                         })
                     }
-                    res.json({message: "Status changed successfully", order})
+                    res.status(200).json({
+                        status: "success",
+                        message: "Status changed successfully", 
+                        order
+                    })
                 })
 }
 
@@ -144,11 +159,17 @@ exports.TotalOrders = async (req, res) => {
         Delivered: Delivered,
         Cancelled: Cancelled
     }
-    res.status(200).json(orders)
+    res.status(200).json({
+        status: "success",
+        orders
+    })
 }
 
 
 exports.TotalUsers = async (req, res) => {
     const users = await User.countDocuments()
-    res.json({TotalUsers: users})
+    res.status(200).json({
+        status: "success",
+        TotalUsers: users
+    })
 }

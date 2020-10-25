@@ -22,8 +22,12 @@ exports.addToCart = async (req, res) => {
     if(productInCart) {
         // If product is already added in cart, update the quantity
         Cart.findOneAndUpdate({_id: productInCart._id}, {$inc: {Quantity: 1}}, {new: true }, function(err, data) {
-            if(err) return res.status(400).json(err)
-            return res.status(200).json({msg: "Product is already in Cart. Successfully updated quantity", data})
+            if(err) return res.status(500).json(err)
+            return res.status(200).json({ 
+                status: "success",
+                message: "Product is already in Cart. Successfully updated quantity", 
+                data
+            })
         })
     } 
 
@@ -32,7 +36,11 @@ exports.addToCart = async (req, res) => {
         const product = new Cart({product: productId})
         await product.save((err, addedProduct) => {
            if(err) return res.status(400).json(err)
-           return res.status(201).json({msg: "Product successfully added to cart", addedProduct})
+           return res.status(200).json({
+               status: "success",
+               message: "Product successfully added to cart", 
+               addedProduct
+            })
        })
     }
 }
@@ -41,8 +49,12 @@ exports.getCartItems = async (req, res) => {
     await Cart.find()
         .populate("product")
         .exec((err, data) => {
-        if(err) return res.status(400).json(err)
-        return res.status(200).json({Items: data.length, data})
+        if(err) return res.status(500).json(err)
+        return res.status(200).json({
+            status: "success",
+            Items: data.length, 
+            data
+        })
     })
 }
 
@@ -51,7 +63,7 @@ exports.getCartTotal = (req, res) => {
     Cart.find()
     .populate("product")
         .exec((err, data) => {
-        if(err) return res.status(400).json(err)
+        if(err) return res.status(500).json(err)
         const products = data
         const priceArray = (products.map((product) => {
             return (product.Quantity * product.product.price)
@@ -67,7 +79,7 @@ exports.getCartTotal = (req, res) => {
         if(voucher) {
             Voucher.findOne({name: voucher}).exec((err, voucher) => {
                 if(err || !voucher) {
-                    res.status(400).json({
+                    res.status(500).json({
                         error: "Invalid voucher"
                     })
                 }
@@ -77,12 +89,18 @@ exports.getCartTotal = (req, res) => {
                     } else {
                         // console.log(voucher.amount)
                         const updatedTotal = Total - voucher.amount
-                        return res.status(200).json({CartTotal: updatedTotal})               
+                        return res.status(200).json({
+                            status: "success",
+                            CartTotal: updatedTotal
+                        })               
                     }
                 }
             })
         } else {
-            return res.status(200).json({CartTotal: Total})
+            return res.status(200).json({
+                status: "success",
+                CartTotal: Total
+            })
         }
         
     })
@@ -101,14 +119,18 @@ exports.Increase = async (req, res) => {
     if(productInCart) {
         // If product is already added in cart, update the quantity
         Cart.findOneAndUpdate({_id: productInCart._id}, {$inc: {Quantity: 1}}, {new: true }, function(err, data) {
-            if(err) return res.status(400).json(err)
-            return res.status(200).json({msg: "Successfully updated quantity", data})
+            if(err) return res.status(500).json(err)
+            return res.status(200).json({
+                status: "success",
+                message: "Successfully updated quantity", 
+                data
+            })
         })
     } 
 
     else {
         // console.log(productId, productInCart)
-        return res.json("product not present in cart")
+        return res.status(404).json({message: "product not found in cart"})
     }
 } 
 
@@ -123,21 +145,28 @@ exports.Decrease = async (req, res) => {
         // If product is already added in cart, update the quantity
         if(productInCart.Quantity <= 1) {
             productInCart.remove((err, data) => {
-                if(err) return res.json(err)
-                return res.json("Product removed successfully from cart")
+                if(err) return res.status(500).json(err)
+                return res.status(200).json({
+                    status: "success",
+                    message: "Product removed successfully from cart"
+                })
             })
         }
 
         else {
             Cart.findOneAndUpdate({_id: productInCart._id}, {$inc: {Quantity: -1}}, {new: true }, function(err, data) {
-                if(err) return res.status(400).json(err)
-                return res.status(200).json({msg: "Successfully updated quantity", data})
+                if(err) return res.status(500).json(err)
+                return res.status(200).json({
+                    status: "success",
+                    message: "Successfully updated quantity", 
+                    data
+                })
             })
         }
     } 
 
     else {
-        return res.json("product not found in cart")
+        return res.status(404).json({message: "product not found in cart"})
     }
 }
 
@@ -157,12 +186,15 @@ exports.deleteCartItems = async (req, res) => {
 
     if(productInCart) {
         productInCart.remove((err, data) => {
-            if(err) return res.json(err)
-            return res.json("Product removed successfully from cart")
+            if(err) return res.status(500).json(err)
+            return res.status(200).json({
+                status: "success",
+                message: "Product removed successfully from cart"
+            })
         })
     }
     else {
-        return res.json("Product not found in cart")
+        return res.status(404).json({message: "Product not found in cart"})
     }
 }
 
@@ -177,17 +209,24 @@ exports.Update = async (req, res) => {
 
         productInCart.save((err, updated) => {
             if(err) return res.status(500).json(err)
-            return res.json({message: "product quantity updated", updated})
+            return res.status(200).json({
+                status: "success",
+                message: "product quantity updated", 
+                updated
+            })
         })
     } else {
-        return res.json("Product not found in Cart")
+        return res.status(404).json({message: "Product not found in Cart"})
     }
 }
 
 exports.deleteAllItems = async (req, res) => {
     await Cart.deleteMany({}, (err, result) => {
         if(err) return res.status(500).json(err)
-        return res.status(200).json("All items in cart has been deleted")
+        return res.status(200).json({
+            status: "success",
+            message: "All items in cart has been deleted"
+        })
     })
 }
 
@@ -198,12 +237,15 @@ exports.moveToWishlist = async (req, res) => {
     const product = req.params.productId
     const productInCart = await Cart.findOne({product: product})
     await productInCart.remove((err, data) => {
-        if(err) return res.json(err)
+        if(err) return res.status(500).json(err)
     }) 
 
     const newProduct = new Wishlist({product: product})
     await newProduct.save((err, savedProduct) => {
         if(err) res.status(500).json(err)
-        return res.status(200).json("Product moved to wishlist")
+        return res.status(200).json({
+            status: "success",
+            message: "Product moved to wishlist"
+        })
     })
 }

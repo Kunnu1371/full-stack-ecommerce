@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken')
 const expressJwt = require('express-jwt')
 
 exports.signup = async (req, res) => {
-    console.log(req.body)
+    // console.log(req.body)
     const userFound = await User.findOne({email: { $regex: `^${req.body.email}$`, $options: "i" }}, (err, user) => {
-        if(err) return res.json(err)
+        if(err) return res.status(500).json(err)
     })
     if(userFound) {
         // console.log("userFound", userFound)
@@ -21,11 +21,11 @@ exports.signup = async (req, res) => {
             }
             user.salt = undefined
             user.hashed_Password = undefined
-            res.json({
+            res.status(201).json({
                 status: "success",
+                message: "User has been registered",
                 user 
             })
-            console.log(user)
         })
     }
 } 
@@ -35,7 +35,7 @@ exports.signin = (req, res) => {
     const { email, password} = req.body
     User.findOne({email}, (err, user) => {
         if(err || !user) {
-            return res.status(400).json({
+            return res.status(404).json({
                 err: "User with that email doesn't exist. Please signup"
             })
         }
@@ -48,16 +48,16 @@ exports.signin = (req, res) => {
         const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET)
         res.cookie('t', token, { expire: new Date() + 9999})
         const {_id, name, email, role} = user
-        return res.json({  status: "success",
+        return res.status(200).json({  status: "success",
                             token,
-                            user: {_id, email, name, role}
+                            user: {_id, name, email, role}
                         })
     })
 }
 
 exports.signout = (req, res) => {
     res.clearCookie('t')
-    res.json({
+    res.status(200).json({
         message: "signout success"
     })
 }

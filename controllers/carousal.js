@@ -6,7 +6,7 @@ const _ = require('lodash')
 exports.carousalById = (req,res, next, id) => {
     Carousal.findById(id).exec((err, carousal) => {
         if(err || !carousal) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Image not found'
             })
         }
@@ -21,7 +21,7 @@ exports.create = (req, res) => {
     form.keepExtensions = true
     form.parse(req, (err, fields, files) => {
         if(err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 error: 'Image could not be uploaded'
             })
         }
@@ -41,11 +41,13 @@ exports.create = (req, res) => {
 
         carousal.save((err, image) => {
             if(err) {
-                return res.status(400).json({
-                    error: err
-                })
+                return res.status(400).json({error: err})
             }
-            res.json({message: "Image created successfully", image})
+            res.status(201).json({ 
+                status: "success", 
+                message: "Image created successfully", 
+                image
+            })
         })
     })
 }
@@ -55,7 +57,7 @@ exports.create = (req, res) => {
 exports.read = (req, res, next) => {
     if(req.carousal.image.data) {
         res.set('Content-Type', req.carousal.image.contentType)
-        return res.send(req.carousal.image.data)
+        return res.status(200).send(req.carousal.image.data)
     }
     next();
 }
@@ -65,7 +67,7 @@ exports.update = (req, res) => {
     form.keepExtensions = true
     form.parse(req, (err, fields, files) => {
         if(err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 error: 'Image could not be uploaded'
             })
         }
@@ -86,13 +88,14 @@ exports.update = (req, res) => {
 
         carousal.save((err, image) => {
             if(err) {
-                return res.status(400).json({
-                    error: err
-                })
+                return res.status(500).json({error: err})
             }
-            res.json({message: "Image updated successfully", image})
+            res.status(200).json({ 
+                status: "success", 
+                message: "Image updated successfully", 
+                image
+            })
         })
-        
     })
 }
 
@@ -107,6 +110,7 @@ exports.remove = (req, res) => {
             })
         }
         res.json({
+            status: "success",
             "message": "Image deleted successfully."
         })
     })

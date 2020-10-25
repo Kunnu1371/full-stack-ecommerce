@@ -9,7 +9,7 @@ exports.signup = async (req, res) => {
     })
     if(adminFound) {
         // console.log("userFound", adminFound)
-        return res.json("Admin with that email exist in database. Please login")
+        return res.status(400).json("Admin with that email exist in database. Please login")
     } else {
             const admin = new Admin(req.body)
             admin.save((err, admin) => {
@@ -20,8 +20,9 @@ exports.signup = async (req, res) => {
             }
             admin.salt = undefined
             admin.hashed_Password = undefined
-            res.json({
+            res.status(201).json({
                 status: "success",
+                message: "Admin has been registered",
                 admin 
             })
             console.log(admin)
@@ -34,8 +35,8 @@ exports.signin = (req, res) => {
     const { email, password} = req.body
     Admin.findOne({email}, (err, admin) => {
         if(err || !admin) {
-            return res.status(400).json({
-                err: "Admin with that email doesn't exist. Please signup"
+            return res.status(404).json({
+                error: "Admin with that email doesn't exist. Please signup"
             })
         }
         // If admin found
@@ -47,7 +48,7 @@ exports.signin = (req, res) => {
         const token = jwt.sign({_id: admin._id}, process.env.JWT_SECRET)
         res.cookie('t', token, { expire: new Date() + 9999})
         const {_id, name, email, role} = admin
-        return res.json({   status: "success",
+        return res.status(200).json({   status: "success",
                             token,
                             admin: {_id, email, name, role}
                         })
@@ -56,7 +57,7 @@ exports.signin = (req, res) => {
 
 exports.signout = (req, res) => {
     res.clearCookie('t')
-    res.json({
+    res.status(200).json({
         message: "signout success"
     })
 }

@@ -9,7 +9,7 @@ const path = require('path')
 exports.productById = (req,res, next, id) => {
     Product.findById(id).exec((err, product) => {
         if(err || !product) {
-            return res.status(400).json({
+            return res.status(404).json({
                 error: 'Product not found'
             })
         }
@@ -19,8 +19,11 @@ exports.productById = (req,res, next, id) => {
 }
 
 exports.read = (req, res) => {
-    req.product.photo = undefined
-    return res.json(req.product)
+    const product = req.product
+    return res.status(200).json({
+        status: "success",
+        product
+    })
 }
 
 
@@ -77,12 +80,16 @@ exports.create = (req, res) => {
                                     Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
                                         if(err) return res.status(500).json(err)
                                         console.log(filePath)
-                                        return res.status(201).json({message: "Product created successfully", Product})
+                                        return res.status(201).json({
+                                            status: "success",
+                                            message: "Product created successfully", 
+                                            Product
+                                        })
                                     })
                                     // return res.status(201).json({message: "Product created successfully", result})
                                 })
                             }
-                            else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                            else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                         }) 
                     }
                 }
@@ -114,12 +121,16 @@ exports.create = (req, res) => {
                                     Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
                                         if(err) return res.status(500).json(err)
                                         console.log(filePath)
-                                        return res.status(201).json({message: "Product created successfully", Product})
+                                        return res.status(201).json({
+                                            status: "success",
+                                            message: "Product created successfully", 
+                                            Product
+                                        })
                                     })
                                     // return res.status(201).json({message: "Product created successfully", result})
                                 })
                             }
-                            else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                            else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                         }) 
                     }
                 }
@@ -131,10 +142,14 @@ exports.create = (req, res) => {
                 if(result) {  
                         product.save((err, result) => {
                             if(err) {return res.status(500).json({error: err})}
-                            return res.status(201).json({message: "Product created successfully", result})
+                            return res.status(201).json({
+                                status: "success",
+                                message: "Product created successfully", 
+                                result
+                            })
                         })
                     }
-                    else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                    else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                 }) 
             }
         })
@@ -193,12 +208,16 @@ exports.create = (req, res) => {
                                         Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
                                             if(err) return res.status(500).json(err)
                                             console.log(filePath)
-                                            return res.status(201).json({message: "Product updated successfully", updated})
+                                            return res.status(200).json({
+                                                status: "success",
+                                                message: "Product updated successfully", 
+                                                updated
+                                            })
                                         })
                                         // return res.status(201).json({message: "Product updated successfully", result})
                                     })
                                 }
-                                else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                                else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                             }) 
                         }
                     }
@@ -231,12 +250,16 @@ exports.create = (req, res) => {
                                         }
                                         Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
                                             if(err) {return res.status(500).json(err)}
-                                            return res.status(201).json({message: "Product updated successfully", updated})
+                                            return res.status(200).json({
+                                                status: "success",
+                                                message: "Product updated successfully", 
+                                                updated
+                                            })
                                         })
                                         // return res.status(201).json({message: "Product created successfully", result})
                                     })
                                 }
-                                else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                                else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                             }) 
                         }
                     }
@@ -248,10 +271,14 @@ exports.create = (req, res) => {
                     if(result) {  
                             product.save((err, updated) => {
                                 if(err) {return res.status(500).json({error: err})}
-                                return res.status(201).json({message: "Product updated successfully", updated})
+                                return res.status(200).json({
+                                    status: "success",
+                                    message: "Product updated successfully", 
+                                    updated
+                                })
                             })
                         }
-                        else{return res.status(400).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                        else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
                     }) 
                 }
             })
@@ -264,11 +291,12 @@ exports.remove = (req, res) => {
     let product = req.product
     product.remove((err, deletedProduct) => {
         if(err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 error: err
             })
         }
-        res.json({
+        res.status(200).json({
+            status: "success",
             "message": "Product deleted successfully."
         })
     })
@@ -365,11 +393,14 @@ exports.listRelated = (req, res) => {
     .populate('category', '_id name')
     .exec((err, products) => {
         if(err) {
-            res.status(400).json({
+            res.status(404).json({
                 error: "Product not found"
             })
         }
-       res.json(products)
+        res.status(200).json({
+            status: "success",    
+            products
+        })
     })
 }
 
@@ -415,11 +446,10 @@ exports.listBySearch = (req, res) => {
         .limit(limit)
         .exec((err, data) => {
             if (err) {
-                return res.status(400).json({
-                    error: "Products not found"
-                });
+                return res.status(500).json({error: err});
             }
-            res.json({
+            res.status(200).json({
+                status: "success",
                 size: data.length,
                 data
             });
@@ -445,7 +475,7 @@ exports.decreaseQuantity = async (req, res) => {
             const productQuantityInCart = product.Quantity
             console.log(productQuantityInCart)
             await Product.findOneAndUpdate({_id: product.product}, {$inc: { quantity: -productQuantityInCart, sold: +productQuantityInCart }}, {new: true}).exec((err, results) => {
-                if(err) {return res.json("Cannot update quantity")}
+                if(err) {return res.status(500).json({error: err})}
                 console.log("Successfully updated", results.quantity)
             })
         })

@@ -8,15 +8,19 @@ exports.addToWishlist = async (req, res) => {
     const productInCart = await Wishlist.findOne({product: productId})
     if(productInCart) {
         // If product is already added in wishlist, gives the message
-        return res.status(200).json("Product is already in wishlist.")
+        return res.status(200).json({message: "Product is already in wishlist."})
     } 
 
     else {
         // If product is not added in cart, then add it to cart
         const product = new Wishlist({product: productId})
         await product.save((err, addedProduct) => {
-           if(err) return res.status(400).json(err)
-           return res.status(201).json({msg: "Added to wishlist", addedProduct})
+           if(err) return res.status(500).json(err)
+            return res.status(200).json({
+                status: "success",   
+                message: "Added to wishlist", 
+                addedProduct
+            })
        })
     }
 }
@@ -26,8 +30,12 @@ exports.getWishlistItems = async (req, res) => {
     await Wishlist.find()
         .populate("product")
         .exec((err, data) => {
-        if(err) return res.status(400).json(err)
-        return res.status(200).json({Items: data.length, data})
+        if(err) return res.status(500).json(err)
+        return res.status(200).json({
+            status: "success",
+            Items: data.length, 
+            data
+        })
     })
 }
 
@@ -38,12 +46,15 @@ exports.deleteWishlistItems = async (req, res) => {
 
     if(productInWishlist) {
         productInWishlist.remove((err, data) => {
-            if(err) return res.json(err)
-            return res.json("Product removed from wishlist")
+            if(err) return res.status(500).json(err)
+            return res.status(200).json({
+                status: "success",
+                message: "Product removed from wishlist"
+            })
         })
     }
     else {
-        return res.json("Product not present in wishlist")
+        return res.status(404).json({message: "Product not found in wishlist"})
     }
 }
 
@@ -55,12 +66,15 @@ exports.moveToCart = async (req, res) => {
     const product = req.params.productId
     const productInWishlist = await Wishlist.findOne({product: product})
     await productInWishlist.remove((err, data) => {
-        if(err) return res.json(err)
+        if(err) return res.status(500).json(err)
     }) 
 
     const newProduct = new Cart({product: product})
     await newProduct.save((err, savedProduct) => {
         if(err) res.status(500).json(err)
-        return res.status(200).json("Product moved to cart")
+        return res.status(200).json({
+            status: "success",
+            message: "Product moved to cart"
+        })
     })
 }
