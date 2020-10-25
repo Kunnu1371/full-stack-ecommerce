@@ -473,10 +473,10 @@ exports.decreaseQuantity = async (req, res) => {
         if(err) { return res.json(err)}
         cart.map(async (product) => {
             const productQuantityInCart = product.Quantity
-            console.log(productQuantityInCart)
+            // console.log(productQuantityInCart)
             await Product.findOneAndUpdate({_id: product.product}, {$inc: { quantity: -productQuantityInCart, sold: +productQuantityInCart }}, {new: true}).exec((err, results) => {
                 if(err) {return res.status(500).json({error: err})}
-                console.log("Successfully updated", results.quantity)
+                // console.log("Successfully updated product quantity in database", results.quantity)
             })
         })
     })

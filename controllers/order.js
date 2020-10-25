@@ -1,8 +1,13 @@
 const Order =  require('../models/order')
 const Cart =  require('../models/cart')
-const {errorHandler} = require('../helpers/dbErrorHandler')
 const User = require('../models/user')
+const {errorHandler} = require('../helpers/dbErrorHandler')
 const  { decreaseQuantity } = require('../controllers/product')
+require('dotenv').config()
+const sgMail = require('@sendgrid/mail');
+const api_key = process.env.API_KEY
+sgMail.setApiKey(api_key);
+
 
 exports.orderById = (req, res, next, id) => {
     Order.findById(id)
@@ -31,10 +36,10 @@ exports.create = async (req, res) => {
     let history = []
 
     // Before placing order it will check cart is empty or not. If cart is empty a message will return "Cannot place order, cart is empty. "
-    Cart.countDocuments().exec((err, result) => {
+    Cart.countDocuments().exec((err, productsInCart) => {
         if(err) return res.status(500).json(err)
-        console.log("result: ", result)
-        if(result) {
+        console.log("products in Cart: ", productsInCart)
+        if(productsInCart) {
             Cart.find().exec(async (err, products) => { 
                 if(err) { return res.status(500).json(err) }
                 else {
@@ -44,39 +49,101 @@ exports.create = async (req, res) => {
                     })
                     
                     const orderCreated = new Order(order) 
+                    let ordersbyUser = order.user.history.length
                     await orderCreated.save(async (err, order) => {
                         if(err) {
-                            return res.status(500).json({
-                                error: errorHandler(err)
-                            })
+                            return res.status(500).json({error: errorHandler(err)})
                         }
-                    
+                        // console.log(order)
                         await decreaseQuantity()
+                        
 
                         // It clears cart after order placed
                         await Cart.deleteMany({}, (err, result) => {
                             if(err) return res.status(500).json(err)
                         })
-                        
-                        
+                           
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
                             if(err) {res.status(500).json(err)}
                             // return res.status(201).json(data)
                         })
-                        order.user.history = undefined
-                        return res.status(201).json({
-                            status: "success",
-                            message: "Order created successfully",
-                            order
-                        })
+
+                        let name = [], quantity = [], price = [], description = []
+                        let cart = await Cart.find().populate("product")
+                        try {
+                            cart.map((products) => {
+                                name.push(products.product.name)
+                                quantity.push(products.Quantity)
+                                price.push(products.product.price)
+                                description.push(products.product.description)
+                            })      
+                            // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
+                        }
+                        catch (err) {
+                            return res.status(400).json(err.message);
+                        }
+                        // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price) 
+                        const emailData = {
+                            to: 'kunal.1822it1077@kiet.edu', // admin
+                            from: 'kunalgautam1371@gmail.com',
+                            subject: `A new order is received`,
+                            html: `
+                            <h1>Hey Admin, Somebody just made a purchase in your ecommerce store</h1>
+                            <h2>Customer details:</h2>
+                            <p>Customer name: <b>${order.user.name}</b></p>
+                            <p>Email: </b>${order.user.email}</b></p>
+                            <p>Address: <b>${order.address}</b></p>
+                            <p>User's purchase history: <b>${ordersbyUser} purchase(s)</b></p>
+                            <p>Total products: <b>${order.products.length}</b></p>
+                            <p>Transaction ID: <b>${order.transaction_id}</b></p>
+                            <p>Order status: <b>${order.status}</b></p>
+                            <h2>Product details:</h2>
+                            <p>Product name: <b>${name[0]}</b></p>
+                            <p>Price: <b>${price[0]}</b></p>
+                            <p>Quantity: </b>${quantity[0]}</b></p>
+                            <p>Description: <b>${description[0]}</b></p>
+                            <hr />`
+                        }
+                        await sgMail
+                        .send(emailData)
+                        .then(sent => console.log('SENT >>>', sent))
+                        .catch(err => console.log('ERR >>>', err));
+
+
+                        // email to buyer
+                        const emailData2 = {
+                            // to: order.user.email,
+                            // from: 'noreply@ecommerce.com',
+                            to: 'kunalgautam13711@gmail.com',
+                            from: 'kunalgautam1371@gmail.com',
+                            subject: `You order has been successfully placed `,
+                            html: `
+                            <h1>Hey ${req.profile.name}, Thank you for shopping with us.</h1>
+                            <p>Total products: <b>${order.products.length}</b></p>
+                            <p>Transaction ID: <b>${order.transaction_id}</b></p>
+                            <p>Order status: <b>${order.status}</b></p>
+                            <p>Product details:</p>
+                            <hr />
+                            `
+                        }
+                        await sgMail
+                        .send(emailData2)
+                        .then(sent => console.log('SENT 2 >>>', sent))
+                        .catch(err => console.log('ERR 2 >>>', err));
+                 
+                    })    
+                    
+                    order.user.history = undefined
+                    return res.status(201).json({
+                        status: "success",
+                        message: "Order created successfully",
+                        order
                     })
                 }
             })
         }
-        else {
-            return res.status(400).json("Cannot place order, cart is empty. ")
-        }
+        else { return res.status(400).json({message: "Cannot place order, cart is empty. "}) }
     })
 }
 
