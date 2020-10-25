@@ -79,5 +79,6 @@
     </ul>
 
 <li>Invoice feature</li>
+<li>Email alert to Admin and Customer whenever order is placed</li>
 
 </ol>
