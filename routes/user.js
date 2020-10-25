@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const  { requireSignin, isAuth }  = require('../controllers/auth')
+const  { requireSignin, isAuth }  = require('../controllers/authUser')
 const  { userById, read, update }  = require('../controllers/user')
 const { OrderHistory } = require('../controllers/order')
 

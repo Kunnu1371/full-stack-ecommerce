@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
-const authRoutes = require('./routes/authUser')
+const authUserRoutes = require('./routes/authUser')
 const authAdminRoutes = require('./routes/authAdmin')
 const userRoutes = require('./routes/user')
 const adminRoutes = require('./routes/admin')
@@ -28,7 +28,7 @@ app.use(cookieParser())
 app.use(expressValidator());
 
 // Routes
-app.use('/api', authRoutes)
+app.use('/api', authUserRoutes)
 app.use('/api', authAdminRoutes)
 app.use('/api', userRoutes)
 app.use('/api', adminRoutes)
