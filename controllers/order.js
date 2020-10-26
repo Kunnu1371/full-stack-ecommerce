@@ -164,16 +164,17 @@ exports.create = async (req, res) => {
                         }
                         
                     // SMS Alert
-                        const nexmo = new Nexmo({
+                        const nexmo = await new Nexmo({
                             apiKey: process.env.APIKEY,
                             apiSecret: process.env.APISECRET,
                         });
                         const from = 'Vonage APIs';
                         // const to = order.user.phone;
                         const to = '919650543482';
-                        const text = `Order Placed: Your Order for products(s): ${name.map((name) => {
-                            return name
-                        })} has been successfully placed. Order no. ${order._id}`;
+                        // const text = `Order Placed: Your Order for products(s): ${name.map((name) => {
+                        //     return name
+                        // })} has been successfully placed. Order no. ${order._id}`;
+                        const text = 'Hello World!'
                         await nexmo.message.sendSms(from, to, text);
 
                     order.user.history = undefined
