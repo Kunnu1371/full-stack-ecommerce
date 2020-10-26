@@ -59,9 +59,9 @@ exports.create = async (req, res) => {
                         
 
                         // It clears cart after order placed
-                        await Cart.deleteMany({}, (err, result) => {
-                            if(err) return res.status(500).json(err)
-                        })
+                        // await Cart.deleteMany({}, (err, result) => {
+                        //     if(err) return res.status(500).json(err)
+                        // })
                            
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
@@ -69,21 +69,42 @@ exports.create = async (req, res) => {
                             // return res.status(201).json(data)
                         })
 
-                        let name = [], quantity = [], price = [], description = []
-                        let cart = await Cart.find().populate("product")
-                        try {
-                            cart.map((products) => {
-                                name.push(products.product.name)
-                                quantity.push(products.Quantity)
-                                price.push(products.product.price)
-                                description.push(products.product.description)
-                            })      
-                            // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
-                        }
-                        catch (err) {
-                            return res.status(400).json(err.message);
-                        }
+                        // let name = [], quantity = [], price = [], description = []
+                        // let cart = await Cart.find().populate("product")
+                        // try {
+                        //     cart.map((products) => {
+                        //         name.push(products.product.name)
+                        //         quantity.push(products.Quantity)
+                        //         price.push(products.product.price)
+                        //         description.push(products.product.description)
+                        //     })      
+                        //     console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
+                        // }
+                        // catch (err) {
+                        //     return res.status(400).json(err.message);
+                        // }
                         // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price) 
+                        
+                        let cart = await Cart.find().populate("product")
+                        function getProductList() {
+                            let productList = "";
+                            for(let i = 1; i <= 1; i++) {
+                                cart.map((products) => {
+                                    productList =
+                                    productList +
+                                        `
+                                        <tr>
+                                            <td>${products.product.name}</td>
+                                            <td>${products.product.price}</td>
+                                            <td>${products.Quantity}</td>
+                                            <td>${products.product.description}<td>
+                                        </tr>
+                                    `;
+                                })
+                            }
+                            return productList;
+                        }
+                        
                         const emailData = {
                             to: 'kunal.1822it1077@kiet.edu', // admin
                             from: 'kunalgautam1371@gmail.com',
@@ -91,18 +112,23 @@ exports.create = async (req, res) => {
                             html: `
                             <h1>Hey Admin, Somebody just made a purchase in your ecommerce store</h1>
                             <h2>Customer details:</h2>
-                            <p>Customer name: <b>${order.user.name}</b></p>
-                            <p>Email: </b>${order.user.email}</b></p>
-                            <p>Address: <b>${order.address}</b></p>
-                            <p>User's purchase history: <b>${ordersbyUser} purchase(s)</b></p>
-                            <p>Total products: <b>${order.products.length}</b></p>
-                            <p>Transaction ID: <b>${order.transaction_id}</b></p>
-                            <p>Order status: <b>${order.status}</b></p>
+                            <p><b>Customer name:</b> ${order.user.name}</p>
+                            <p><b>Email:</b> ${order.user.email}</p>
+                            <p><b>Address:</b> ${order.address}</p>
+                            <p><b>Purchase history:</b> ${ordersbyUser}</p>
+                            <p><b>Total products:</b> ${order.products.length}</p>
+                            <p><b>Transaction ID:</b> ${order.transaction_id}</p>
+                            <p><b>Order status:</b> ${order.status}</p>
                             <h2>Product details:</h2>
-                            <p>Product name: <b>${name[0]}</b></p>
-                            <p>Price: <b>${price[0]}</b></p>
-                            <p>Quantity: </b>${quantity[0]}</b></p>
-                            <p>Description: <b>${description[0]}</b></p>
+                            <table>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Description</th>
+                                </tr>
+                                ${getProductList()}
+                            </table>
                             <hr />`
                         }
                         await sgMail
