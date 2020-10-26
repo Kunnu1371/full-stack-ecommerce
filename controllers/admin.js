@@ -31,6 +31,8 @@ exports.update = (req, res) => {
                     error: 'You are not authorized to perform this action'
                 })
             }
+            admin.salt = undefined
+            admin.hashed_Password = undefined
             res.status(200).json({status: "success", admin})
         })
 }

@@ -3,6 +3,7 @@ const Cart =  require('../models/cart')
 const User = require('../models/user')
 const {errorHandler} = require('../helpers/dbErrorHandler')
 const  { decreaseQuantity } = require('../controllers/product')
+const Nexmo = require('nexmo');
 require('dotenv').config()
 const sgMail = require('@sendgrid/mail');
 const api_key = process.env.API_KEY
@@ -59,9 +60,9 @@ exports.create = async (req, res) => {
                         
 
                         // It clears cart after order placed
-                        // await Cart.deleteMany({}, (err, result) => {
-                        //     if(err) return res.status(500).json(err)
-                        // })
+                        await Cart.deleteMany({}, (err, result) => {
+                            if(err) return res.status(500).json(err)
+                        })
                            
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
@@ -69,22 +70,6 @@ exports.create = async (req, res) => {
                             // return res.status(201).json(data)
                         })
 
-                        // let name = [], quantity = [], price = [], description = []
-                        // let cart = await Cart.find().populate("product")
-                        // try {
-                        //     cart.map((products) => {
-                        //         name.push(products.product.name)
-                        //         quantity.push(products.Quantity)
-                        //         price.push(products.product.price)
-                        //         description.push(products.product.description)
-                        //     })      
-                        //     console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
-                        // }
-                        // catch (err) {
-                        //     return res.status(400).json(err.message);
-                        // }
-                        // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price) 
-                        
                         let cart = await Cart.find().populate("product")
                         function getProductList() {
                             let productList = "";
@@ -105,6 +90,7 @@ exports.create = async (req, res) => {
                             return productList;
                         }
                         
+                        // Email Alert
                         const emailData = {
                             to: 'kunal.1822it1077@kiet.edu', // admin
                             from: 'kunalgautam1371@gmail.com',
@@ -160,6 +146,36 @@ exports.create = async (req, res) => {
                  
                     })    
                     
+
+                    
+                        let name = [], quantity = [], price = [], description = []
+                        let cart = await Cart.find().populate("product")
+                        try {
+                            cart.map((products) => {
+                                name.push(products.product.name)
+                                quantity.push(products.Quantity)
+                                price.push(products.product.price)
+                                description.push(products.product.description)
+                            })      
+                            // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
+                        }
+                        catch (err) {
+                            return res.status(400).json(err.message);
+                        }
+                        
+                    // SMS Alert
+                        const nexmo = new Nexmo({
+                            apiKey: process.env.APIKEY,
+                            apiSecret: process.env.APISECRET,
+                        });
+                        const from = 'Vonage APIs';
+                        // const to = order.user.phone;
+                        const to = '919650543482';
+                        const text = `Order Placed: Your Order for products(s): ${name.map((name) => {
+                            return name
+                        })} has been successfully placed. Order no. ${order._id}`;
+                        await nexmo.message.sendSms(from, to, text);
+
                     order.user.history = undefined
                     return res.status(201).json({
                         status: "success",
