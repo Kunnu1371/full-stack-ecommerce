@@ -3,6 +3,10 @@ const { ObjectId } = mongoose.Schema;
 
 const OrderSchema = new mongoose.Schema(
   {
+    uniqueID: {
+      type: String
+    },
+
     products: {
       type: Array,
       default: [],

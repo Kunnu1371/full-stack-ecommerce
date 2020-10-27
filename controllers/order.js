@@ -24,9 +24,14 @@ exports.orderById = (req, res, next, id) => {
     })
 }
 
+const {v1} = require('uuid');
+
+
+let uuidv1 = v1;
 
 exports.create = async (req, res) => {
     const order = {
+        uniqueID: uuidv1(),
         user: req.profile,
         products: [],
         address: req.body.address,
@@ -55,15 +60,13 @@ exports.create = async (req, res) => {
                         if(err) {
                             return res.status(500).json({error: errorHandler(err)})
                         }
-                        // console.log(order)
-                        await decreaseQuantity()
-                        
-
-                        // It clears cart after order placed
-                        await Cart.deleteMany({}, (err, result) => {
-                            if(err) return res.status(500).json(err)
-                        })
-                           
+                        console.log(order)
+                        res.status(201).json({
+                            status: "success",
+                            message: "Order created successfully",
+                            order
+                        })      
+                     
                         // It push the order(s) in User's purchasing history
                         User.findOneAndUpdate({_id: req.profile.id}, {$push: {history: order._id}}, {new: true},  (err, data) => {
                             if(err) {res.status(500).json(err)}
@@ -75,15 +78,16 @@ exports.create = async (req, res) => {
                             let productList = "";
                             for(let i = 1; i <= 1; i++) {
                                 cart.map((products) => {
+                                    console.log("test", products.product.name, products.product.price, products.Quantity,products.product.description)
                                     productList =
                                     productList +
-                                        `
-                                        <tr>
-                                            <td>${products.product.name}</td>
-                                            <td>${products.product.price}</td>
-                                            <td>${products.Quantity}</td>
-                                            <td>${products.product.description}<td>
-                                        </tr>
+                                    `
+                                    <tr>
+                                        <td>${products.product.name}</td>
+                                        <td>${products.product.price}</td>
+                                        <td>${products.Quantity}</td>
+                                        <td>${products.product.description}<td>
+                                    </tr>
                                     `;
                                 })
                             }
@@ -101,12 +105,12 @@ exports.create = async (req, res) => {
                             <p><b>Customer name:</b> ${order.user.name}</p>
                             <p><b>Email:</b> ${order.user.email}</p>
                             <p><b>Address:</b> ${order.address}</p>
-                            <p><b>Purchase history:</b> ${ordersbyUser}</p>
+                            <p><b>Purchase history:</b> ${order.user.history.length}</p>
                             <p><b>Total products:</b> ${order.products.length}</p>
                             <p><b>Transaction ID:</b> ${order.transaction_id}</p>
                             <p><b>Order status:</b> ${order.status}</p>
                             <h2>Product details:</h2>
-                            <table>
+                           <table>
                                 <tr>
                                     <th>Name</th>
                                     <th>Price</th>
@@ -122,7 +126,7 @@ exports.create = async (req, res) => {
                         .then(sent => console.log('SENT >>>', sent))
                         .catch(err => console.log('ERR >>>', err));
 
-
+                        console.log("getProductList: ", getProductList())
                         // email to buyer
                         const emailData2 = {
                             // to: order.user.email,
@@ -134,8 +138,18 @@ exports.create = async (req, res) => {
                             <h1>Hey ${req.profile.name}, Thank you for shopping with us.</h1>
                             <p>Total products: <b>${order.products.length}</b></p>
                             <p>Transaction ID: <b>${order.transaction_id}</b></p>
+                            <p>Order ID: <b>${order.uniqueID}</b></p>
                             <p>Order status: <b>${order.status}</b></p>
                             <p>Product details:</p>
+                            <table>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Description</th>
+                                </tr>
+                                ${getProductList()}
+                            </table>
                             <hr />
                             `
                         }
@@ -143,7 +157,14 @@ exports.create = async (req, res) => {
                         .send(emailData2)
                         .then(sent => console.log('SENT 2 >>>', sent))
                         .catch(err => console.log('ERR 2 >>>', err));
-                 
+
+                        
+                        await decreaseQuantity()
+                        
+                        // It clears cart after order placed
+                        await Cart.deleteMany({}, (err, result) => {
+                            if(err) return res.status(500).json(err)
+                        })                  
                     })    
                     
 
@@ -157,7 +178,7 @@ exports.create = async (req, res) => {
                                 price.push(products.product.price)
                                 description.push(products.product.description)
                             })      
-                            // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
+                            console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
                         }
                         catch (err) {
                             return res.status(400).json(err.message);
@@ -177,12 +198,12 @@ exports.create = async (req, res) => {
                         const text = 'Hello World!'
                         await nexmo.message.sendSms(from, to, text);
 
-                    order.user.history = undefined
-                    return res.status(201).json({
-                        status: "success",
-                        message: "Order created successfully",
-                        order
-                    })
+                    // order.user.history = undefined
+                    // return res.status(201).json({
+                    //     status: "success",
+                    //     message: "Order created successfully",
+                    //     order
+                    // })
                 }
             })
         }
