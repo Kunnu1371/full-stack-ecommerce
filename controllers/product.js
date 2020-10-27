@@ -342,43 +342,43 @@ exports.paginatedResults = (Product) => {
     return async (req, res, next) => {
         let order = req.query.order ? req.query.order : 'asc';
         let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
-        let limit = req.query.limit ? parseInt(req.query.limit) : 6;
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
         const page = parseInt(req.query.page)
-    
+
         console.log(req.query)
-      const startIndex = (page - 1) * limit
-      const endIndex = page * limit
-  
-      const results = {}
-  
-      if (endIndex < await Product.countDocuments().exec()) {
-        results.next = {
-          page: page + 1,
-          limit: limit
+        const startIndex = (page - 1) * limit
+        const endIndex = page * limit
+    
+        const results = {}
+    
+        if (endIndex < await Product.countDocuments().exec()) {
+            results.next = {
+            page: page + 1,
+            limit: limit
+            }
         }
-      }
-      
-      if (startIndex > 0) {
-        results.previous = {
-          page: page - 1,
-          limit: limit
+        
+        if (startIndex > 0) {
+            results.previous = {
+            page: page - 1,
+            limit: limit
+            }
         }
-      }
-      try {
-        results.results = await Product.find()
-                                        .select("-photo")
-                                        .populate("category")
-                                        .sort([[sortBy, order]])
-                                        .limit(limit)
-                                        .skip(startIndex)
-                                        .exec()
-        res.paginatedResults = results
-        next()
-      } catch (e) {
-        res.status(500).json({ message: e.message })
-      }
+        try {
+            results.results = await Product.find()
+                                            .select("-photo")
+                                            .populate("category")
+                                            .sort([[sortBy, order]])
+                                            .limit(limit)
+                                            .skip(startIndex)
+                                            .exec()
+            res.paginatedResults = results
+            next()
+        } catch (e) {
+            res.status(500).json({ message: e.message })
+        }
+        }
     }
-  }
 // sell / arrival
 // by sell = /products?sortBy=sold&order=desc&limit=4
 // by arrival = /products?sortBy=createdAt&order=desc&limit=4
@@ -459,10 +459,10 @@ exports.listBySearch = (req, res) => {
 
 
 exports.photo  = (req, res, next) => {
-    if(req.product.photo.data) {
-        res.set('Content-Type', req.product.photo.contentType)
-        return res.send(req.product.photo.data)
-    }
+    if(req.product.photo)
+    console.log(req.product.photo.data[0], req.product.photo.contentType[0])
+    res.set("Content-Type", req.product.photo.contentType[0])
+    res.status(200).send(req.product.photo.data[0])
     next();
 }
 

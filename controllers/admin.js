@@ -72,3 +72,54 @@ exports.removeAdmin = async(req, res) => {
         return res.status(404).json({message: "Admin not found"})
     }
 }
+
+
+exports.TotalUsers = (User) => {
+    return async (req, res, next) => {
+        let order = req.query.order ? req.query.order : 'asc';
+        let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const page = parseInt(req.query.page)
+    
+        console.log(req.query)
+        const startIndex = (page - 1) * limit
+        const endIndex = page * limit
+    
+        const users = await User.countDocuments()
+        const results = {TotalUsers: users}
+        if (endIndex < await User.countDocuments().exec()) {
+            results.next = {
+            page: page + 1,
+            limit: limit
+            }
+        }
+        
+        if (startIndex > 0) {
+            results.previous = {
+            page: page - 1,
+            limit: limit
+            }
+        }
+        try {
+            results.results = await User.find()
+                                            .select('-salt -hashed_Password')
+                                            .sort([[sortBy, order]])
+                                            .limit(limit)
+                                            .skip(startIndex)
+                                            .exec()
+            // res.TotalUsers = results
+            res.json({status: "success", results})
+            next()
+        } catch (e) {
+            res.status(500).json({ message: e.message })
+        }
+        }
+    }
+
+    // exports.TotalUsers = async (req, res) => {
+    //     const users = await User.countDocuments()
+    //     res.status(200).json({
+    //         status: "success",
+    //         TotalUsers: users
+    //     })
+    // }

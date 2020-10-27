@@ -274,12 +274,3 @@ exports.TotalOrders = async (req, res) => {
         orders
     })
 }
-
-
-exports.TotalUsers = async (req, res) => {
-    const users = await User.countDocuments()
-    res.status(200).json({
-        status: "success",
-        TotalUsers: users
-    })
-}
