@@ -167,3 +167,15 @@ exports.OrderList = (Order) => {
         }
     }
 }
+
+
+exports.userInfo = async(req, res) => {
+    const userId = req.params.userId
+    // console.log(userId)
+    try {
+        const user = await User.findById(userId)
+        return res.status(200).json(user)
+    } catch(e) {
+        return res.status(404).json(e)
+    }
+}

@@ -140,7 +140,7 @@ exports.create = async (req, res) => {
                             <p>Transaction ID: <b>${order.transaction_id}</b></p>
                             <p>Order ID: <b>${order.uniqueID}</b></p>
                             <p>Order status: <b>${order.status}</b></p>
-                            <p>Product details:</p>
+                            <h2>Product details:</h2>
                             <table>
                                 <tr>
                                     <th>Name</th>

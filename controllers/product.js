@@ -458,12 +458,12 @@ exports.listBySearch = (req, res) => {
 
 
 
-exports.photo  = (req, res, next) => {
+exports.photo  = (req, res) => {
     if(req.product.photo)
-    console.log(req.product.photo.data[0], req.product.photo.contentType[0])
-    res.set("Content-Type", req.product.photo.contentType[0])
-    res.status(200).send(req.product.photo.data[0])
-    next();
+    console.log(req.product.photo.data, req.product.photo.contentType)
+    // res.set("Content-Type", req.product.photo.contentType[0])
+    // res.status(200).sendFile(req.product.photo.data[0])
+    res.status(200).send(req.product.photo.data)
 }
 
 
