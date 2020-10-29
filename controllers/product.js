@@ -1,9 +1,11 @@
+const RootCategory = require('../models/rootCategory')
+const Category = require('../models/category')
+const SubCategory = require('../models/subCategory')
 const Product = require('../models/product')
 const { errorHandler } = require('../helpers/dbErrorHandler')
 const formidable = require('formidable')
 const _ = require('lodash')
 const fs = require('fs')
-const subCategory = require('../models/subCategory')
 const path = require('path')
 
 exports.productById = (req,res, next, id) => {
@@ -18,12 +20,17 @@ exports.productById = (req,res, next, id) => {
     })
 }
 
-exports.read = (req, res) => {
-    const product = req.product
-    return res.status(200).json({
-        status: "success",
-        product
-    })
+exports.read = async(req, res) => {
+    try {
+        const product = await Product.findById(req.product._id).populate('subcategory', '_id name').populate('category', '_id name').populate('rootcategory', '_id name')
+        return res.status(200).json({ 
+            status: "success",
+            product
+        })
+    }
+    catch(e) {
+        return res.json(400).json(e)
+    }
 }
 
 
@@ -36,12 +43,34 @@ exports.create = (req, res) => {
     form.parse(req, async (err, fields, files) => {
         if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
 
-        const { name, description, price, category, subCategoryName, quantity, shipping } = fields
-        if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
+        let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = fields
+        if(!name || !description || !price || !rootcategory || !category || !subcategory || !quantity || !shipping) {
             return res.status(400).json({
                 error: "All fields are required."
             })
         }
+
+        rootcategory = await RootCategory.findOne({_id: fields.rootcategory})
+        if(!rootcategory) {
+            return res.status(400).json({
+                error: "Root Category doesn't exist. Please make one."
+            })
+        }
+
+        category = await Category.findOne({_id: fields.category})
+        if(!category) {
+            return res.status(400).json({
+                error: "Category doesn't exist. Please make one."
+            })
+        }
+    
+        subcategory = await SubCategory.findOne({_id: fields.subcategory})
+        if(!subcategory) {
+            return res.status(400).json({
+                error: "Sub Category doesn't exist. Please make one."
+            })
+        }
+        console.log(rootcategory, category, subcategory)
 
         if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
             return res.status(400).json("Product already exist.")
@@ -136,21 +165,14 @@ exports.create = (req, res) => {
                 }
             }
             else {
-                subCategory.findById(fields.category).exec((err, result) => {
-                    if(err) {res.status(500).json(err)}
-                    // category found
-                if(result) {  
-                        product.save((err, result) => {
-                            if(err) {return res.status(500).json({error: err})}
-                            return res.status(201).json({
-                                status: "success",
-                                message: "Product created successfully", 
-                                result
-                            })
-                        })
-                    }
-                    else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
-                }) 
+                product.save((err, result) => {
+                    if(err) {return res.status(500).json({error: err})}
+                    return res.status(201).json({
+                        status: "success",
+                        message: "Product created successfully", 
+                        result
+                    })
+                })
             }
         })
     }
@@ -167,12 +189,34 @@ exports.create = (req, res) => {
         form.parse(req, async (err, fields, files) => {
             if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
     
-            const { name, description, price, category, subCategoryName, quantity, shipping } = fields
-            if(!name || !description || !price || !category || !quantity || !shipping || !subCategoryName) {
+            let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = fields
+            if(!name || !description || !price || !rootcategory || !category || !subcategory || !quantity || !shipping) {
                 return res.status(400).json({
                     error: "All fields are required."
                 })
             }
+
+            rootcategory = await RootCategory.findOne({_id: fields.rootcategory})
+            if(!rootcategory) {
+                return res.status(400).json({
+                    error: "Root Category doesn't exist. Please make one."
+                })
+            }
+
+            category = await Category.findOne({_id: fields.category})
+            if(!category) {
+                return res.status(400).json({
+                    error: "Category doesn't exist. Please make one."
+                })
+            }
+        
+            subcategory = await SubCategory.findOne({_id: fields.subcategory})
+            if(!subcategory) {
+                return res.status(400).json({
+                    error: "Sub Category doesn't exist. Please make one."
+                })
+            }
+            console.log(rootcategory, category, subcategory)
 
             let product = req.product
             product = _.extend(product, fields)    
@@ -199,26 +243,19 @@ exports.create = (req, res) => {
                             })  
                         })
                         if(doUpload == 1) {
-                            subCategory.findById(fields.category).exec((err, result) => {
-                                if(err) {res.status(500).json(err)}
-                                // category found
-                            if(result) {  
-                                    product.save((err, result) => {
-                                        if(err) {return res.status(500).json({error: err})}
-                                        Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
-                                            if(err) return res.status(500).json(err)
-                                            console.log(filePath)
-                                            return res.status(200).json({
-                                                status: "success",
-                                                message: "Product updated successfully", 
-                                                updated
-                                            })
-                                        })
-                                        // return res.status(201).json({message: "Product updated successfully", result})
+                            product.save((err, result) => {
+                                if(err) {return res.status(500).json({error: err})}
+                                Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
+                                    if(err) return res.status(500).json(err)
+                                    console.log(filePath)
+                                    return res.status(200).json({
+                                        status: "success",
+                                        message: "Product updated successfully", 
+                                        updated
                                     })
-                                }
-                                else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
-                            }) 
+                                })
+                                // return res.status(201).json({message: "Product updated successfully", result})
+                            })
                         }
                     }
                     else {
@@ -240,45 +277,32 @@ exports.create = (req, res) => {
                             if(err) console.log(err) 
                         })  
                         if(doUpload == 1) {
-                            subCategory.findById(fields.category).exec((err, result) => {
-                                if(err) {res.status(500).json(err)}
-                                if(result) {  
-                                    product.save((err, result) => {
-                                        if(err) {
-                                            console.log("error: ", err)
-                                            return res.status(500).json({error: err})
-                                        }
-                                        Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
-                                            if(err) {return res.status(500).json(err)}
-                                            return res.status(200).json({
-                                                status: "success",
-                                                message: "Product updated successfully", 
-                                                updated
-                                            })
-                                        })
-                                        // return res.status(201).json({message: "Product created successfully", result})
-                                    })
+                            product.save((err, result) => {
+                                if(err) {
+                                    console.log("error: ", err)
+                                    return res.status(500).json({error: err})
                                 }
-                                else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
-                            }) 
+                                Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
+                                    if(err) {return res.status(500).json(err)}
+                                    return res.status(200).json({
+                                        status: "success",
+                                        message: "Product updated successfully", 
+                                        updated
+                                    })
+                                })
+                                // return res.status(201).json({message: "Product created successfully", result})
+                            })
                         }
                     }
                 }
                 else {
-                    subCategory.findById(fields.category).exec((err, result) => {
-                        if(err) {res.status(500).json(err)}
-                        // category found
-                    if(result) {  
-                            product.save((err, updated) => {
-                                if(err) {return res.status(500).json({error: err})}
-                                return res.status(200).json({
-                                    status: "success",
-                                    message: "Product updated successfully", 
-                                    updated
-                                })
-                            })
-                        }
-                        else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
+                    product.save((err, updated) => {
+                        if(err) {return res.status(500).json({error: err})}
+                        return res.status(200).json({
+                            status: "success",
+                            message: "Product updated successfully", 
+                            updated
+                        })
                     }) 
                 }
             })
@@ -297,23 +321,41 @@ exports.remove = (req, res) => {
         }
         res.status(200).json({
             status: "success",
-            "message": "Product deleted successfully."
+            message: "Product has been deleted successfully."
         })
     })
 }
 
 
-// exports.fetch = (req, res) => {
-//     Product.find({category : req.subCategory}) .select("-photo").exec((err, data) => {
-//         if(err) {
-//             res.status(400).json({
-//                 error: err
-//             })
-//         }
-//         res.json(data)
-//     });
-// }
+exports.fetch = async (req, res) => {
+    
+    await Product.find({subcategory : req.params.subcategoryId}).exec((err, products) => {
+        if(err) {
+            res.status(500).json({
+                error: err
+            })
+        }
+        return res.status(200).json({
+            status: "success",
+            total: products.length,
+            products
+        })
+    });
+}
 
+
+exports.list = (req, res) => {
+    Product.find().exec((err, products) => {
+        if(err) {
+            res.status(500).json({error: err})
+        }
+        res.status(200).json({
+            status: "success", 
+            total: products.length,  
+            products
+        }) 
+    })
+}
 
 // exports.list = (req, res) => {
 //     let order = req.query.order ? req.query.order : 'asc';
@@ -393,8 +435,8 @@ exports.listRelated = (req, res) => {
     .populate('category', '_id name')
     .exec((err, products) => {
         if(err) {
-            res.status(404).json({
-                error: "Product not found"
+            res.status(500).json({
+                error: err
             })
         }
         res.status(200).json({

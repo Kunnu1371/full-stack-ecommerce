@@ -2,10 +2,7 @@ const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema
 
 const productSchema = new mongoose.Schema({
-    subCategoryName: {
-        type: String,
-        required: true
-    },
+  
     name: {
         type: String,
         trim: true,
@@ -23,9 +20,19 @@ const productSchema = new mongoose.Schema({
         required: true,
         maxlength: 32
     }, 
+    rootcategory: {
+        type: ObjectId,
+        ref: 'RootCategory',
+        required: true
+    },
     category: {
         type: ObjectId,
-        ref: 'subCategory',
+        ref: 'Category',
+        required: true
+    },
+    subcategory: {
+        type: ObjectId,
+        ref: 'SubCategory',
         required: true
     },
     brand: {

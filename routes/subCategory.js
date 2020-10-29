@@ -5,12 +5,12 @@ const  { create, read, update, remove, subCategoryById, list, fetch }  = require
 const { requireSignin, isAdmin, isAuth } = require('../controllers/authAdmin');
 const  { adminById }  = require('../controllers/admin')
 
-router.get('/sub-category/:subCategoryId', read)
-router.post('/sub-category/create/:adminId', requireSignin, isAdmin, isAuth, create);
-router.put('/sub-category/:subCategoryId/:adminId', requireSignin, isAdmin, isAuth, update);
-router.delete('/sub-category/:subCategoryId/:adminId', requireSignin, isAdmin, isAuth, remove);
-router.get('/sub-categories', list)
-// router.get('/fetch/sub-category/:subCategoryId', fetch);
+router.get('/subcategory/:subCategoryId', read)
+router.post('/subcategory/create/:adminId', requireSignin, isAdmin, isAuth, create);
+router.put('/subcategory/update/:subCategoryId/:adminId', requireSignin, isAdmin, isAuth, update);
+router.delete('/subcategory/delete/:subCategoryId/:adminId', requireSignin, isAdmin, isAuth, remove);
+router.get('/subcategories', list)
+// router.get('/fetch/subcategory/:subCategoryId', fetch);
 
 
 router.param('adminId', adminById)

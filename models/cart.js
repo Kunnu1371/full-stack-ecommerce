@@ -2,9 +2,7 @@ const mongoose = require('mongoose')
 const { ObjectId } = mongoose.Schema
 
 const cartSchema = new mongoose.Schema({
-    // product: {
-    //     type: String
-    // },
+ 
     Quantity: {
         type: Number,
         default: 1
