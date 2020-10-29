@@ -100,26 +100,18 @@ exports.create = (req, res) => {
                         })  
                     })
                     if(doUpload == 1) {
-                        subCategory.findById(fields.category).exec((err, result) => {
-                            if(err) {res.status(500).json(err)}
-                            // category found
-                        if(result) {  
-                                product.save((err, result) => {
-                                    if(err) {return res.status(500).json({error: err})}
-                                    Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
-                                        if(err) return res.status(500).json(err)
-                                        console.log(filePath)
-                                        return res.status(201).json({
-                                            status: "success",
-                                            message: "Product created successfully", 
-                                            Product
-                                        })
-                                    })
-                                    // return res.status(201).json({message: "Product created successfully", result})
+                        product.save((err, result) => {
+                            if(err) {return res.status(500).json({error: err})}
+                            Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
+                                if(err) return res.status(500).json(err)
+                                console.log(filePath)
+                                return res.status(201).json({
+                                    status: "success",
+                                    message: "Product created successfully", 
+                                    Product
                                 })
-                            }
-                            else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
-                        }) 
+                            })
+                        })
                     }
                 }
                 else {
@@ -141,26 +133,18 @@ exports.create = (req, res) => {
                         if(err) console.log(err) 
                     })   
                     if(doUpload == 1) {
-                        subCategory.findById(fields.category).exec((err, result) => {
-                            if(err) {res.status(500).json(err)}
-                            // category found
-                        if(result) {  
-                                product.save((err, result) => {
-                                    if(err) {return res.status(500).json({error: err})}
-                                    Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
-                                        if(err) return res.status(500).json(err)
-                                        console.log(filePath)
-                                        return res.status(201).json({
-                                            status: "success",
-                                            message: "Product created successfully", 
-                                            Product
-                                        })
-                                    })
-                                    // return res.status(201).json({message: "Product created successfully", result})
+                        product.save((err, result) => {
+                            if(err) {return res.status(500).json({error: err})}
+                            Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
+                                if(err) return res.status(500).json(err)
+                                console.log(filePath)
+                                return res.status(201).json({
+                                    status: "success",
+                                    message: "Product created successfully", 
+                                    Product
                                 })
-                            }
-                            else{return res.status(404).json({ message: "Cannot create product as it's Sub-Category doesn't exist"})}
-                        }) 
+                            })
+                        })
                     }
                 }
             }
@@ -254,7 +238,6 @@ exports.create = (req, res) => {
                                         updated
                                     })
                                 })
-                                // return res.status(201).json({message: "Product updated successfully", result})
                             })
                         }
                     }
@@ -290,7 +273,6 @@ exports.create = (req, res) => {
                                         updated
                                     })
                                 })
-                                // return res.status(201).json({message: "Product created successfully", result})
                             })
                         }
                     }
@@ -327,35 +309,18 @@ exports.remove = (req, res) => {
 }
 
 
-exports.fetch = async (req, res) => {
-    
-    await Product.find({subcategory : req.params.subcategoryId}).exec((err, products) => {
-        if(err) {
-            res.status(500).json({
-                error: err
-            })
-        }
-        return res.status(200).json({
-            status: "success",
-            total: products.length,
-            products
-        })
-    });
-}
-
-
-exports.list = (req, res) => {
-    Product.find().exec((err, products) => {
-        if(err) {
-            res.status(500).json({error: err})
-        }
-        res.status(200).json({
-            status: "success", 
-            total: products.length,  
-            products
-        }) 
-    })
-}
+// exports.list = async(req, res) => {
+//     await Product.find().exec((err, products) => {
+//         if(err) {
+//             res.status(500).json({error: err})
+//         }
+//         res.status(200).json({
+//             status: "success", 
+//             total: products.length,  
+//             products
+//         }) 
+//     })
+// }
 
 // exports.list = (req, res) => {
 //     let order = req.query.order ? req.query.order : 'asc';
@@ -392,7 +357,7 @@ exports.paginatedResults = (Product) => {
         const endIndex = page * limit
     
         const results = {}
-    
+        const products = await Product.find().countDocuments()
         if (endIndex < await Product.countDocuments().exec()) {
             results.next = {
             page: page + 1,
@@ -407,20 +372,22 @@ exports.paginatedResults = (Product) => {
             }
         }
         try {
-            results.results = await Product.find()
+            results.products = await Product.find()
                                             .select("-photo")
-                                            .populate("category")
+                                            .populate("rootcategory", "_id name")
+                                            .populate("category", "_id name")
+                                            .populate("subcategory", "_id name")
                                             .sort([[sortBy, order]])
                                             .limit(limit)
                                             .skip(startIndex)
                                             .exec()
-            res.paginatedResults = results
+            res.json({status: "success", total: products, results})
             next()
         } catch (e) {
             res.status(500).json({ message: e.message })
         }
-        }
     }
+}
 // sell / arrival
 // by sell = /products?sortBy=sold&order=desc&limit=4
 // by arrival = /products?sortBy=createdAt&order=desc&limit=4
@@ -510,6 +477,7 @@ exports.photo  = (req, res) => {
 
 
 const Cart = require('../models/cart')
+const { S_IFDIR } = require('constants')
 exports.decreaseQuantity = async (req, res) => {
     await Cart.find().exec((err, cart) => {
         if(err) { return res.json(err)}

@@ -131,8 +131,8 @@ exports.remove = (req, res) => {
 
 
 
-exports.list = (req, res) => {
-    SubCategory.find().exec((err, subcategories) => {
+exports.list = async(req, res) => {
+    await SubCategory.find().exec((err, subcategories) => {
         if(err) {
             res.status(500).json({error: err})
         }
@@ -144,13 +144,46 @@ exports.list = (req, res) => {
     })
 }
 
-// exports.fetch = (req, res) => {
-//     Product.find({category : req.subCategory}) .select("-photo").exec((err, data) => {
-//         if(err) {
-//             res.status(400).json({
-//                 error: err
-//             })
-//         }
-//         res.json(data)
-//     });
-// }
+exports.paginatedResults = (Product) => {
+    return async (req, res, next) => {
+        let order = req.query.order ? req.query.order : 'asc';
+        let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const page = parseInt(req.query.page)
+
+        console.log(req.query)
+        const startIndex = (page - 1) * limit
+        const endIndex = page * limit
+    
+        const results = {}
+        const products = await Product.find({subcategory: req.subcategory._id}).countDocuments()
+        if (endIndex < await Product.countDocuments().exec()) {
+            results.next = {
+            page: page + 1,
+            limit: limit
+            }
+        }
+        
+        if (startIndex > 0) {
+            results.previous = {
+            page: page - 1,
+            limit: limit
+            }
+        }
+        try {
+            results.products = await Product.find({subcategory: req.subcategory._id})
+                                            .select("-photo")
+                                            .populate("rootcategory", "_id name")
+                                            .populate("category", "_id name")
+                                            .populate("subcategory", "_id name")
+                                            .sort([[sortBy, order]])
+                                            .limit(limit)
+                                            .skip(startIndex)
+                                            .exec()
+            res.json({status: "success", total: products, results})
+            next()
+        } catch (e) {
+            res.status(500).json({ message: e.message })
+        }
+    }
+}
