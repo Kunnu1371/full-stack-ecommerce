@@ -39,7 +39,7 @@ exports.create = async (req, res) => {
 
     if(!req.body.category || req.body.category.trim() == "") {
         return res.status(400).json({
-            error: "Root Category ID is required. Please enter root category ID"
+            error: "Category ID is required. Please enter category ID"
         })
     }
 

@@ -52,9 +52,6 @@ app.use('/api', voucherRoutes)
 app.use('/api', cartRoutes)
 app.use('/api', wishListRoutes)
 
-// const {invoice} = require('./invoice')
-// app.get('/', invoice)
-
 app.listen(3000, () => {
     console.log(`Server started on port 3000`)
 })

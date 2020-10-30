@@ -1,5 +1,5 @@
 const Voucher = require('../models/voucher')
-const subCategory = require('../models/subCategory')
+const RootCategory = require('../models/rootCategory')
 exports.voucherById = (req, res, next, id) => {
     Voucher.findById(id).exec((err, voucher) => {
         if(err || !voucher) {
@@ -19,15 +19,13 @@ exports.create = async (req, res) => {
         return res.status(400).json("All fields are required.")
     }
     // Here id is the _id of Category or subCategory for which the voucher is created.
-    await subCategory.findById(id).exec((err, result) => {
-        if(err) {
-            return res.status(500).json({error: err})
-        }
+    await RootCategory.findById(id).exec((err, result) => {
+        if(err) {return res.status(500).json({error: err})}
         if(result) {
             const voucherObj  = {
                 name: req.body.name,
                 amount: req.body.amount,
-                voucherCategory: req.body.id,
+                rootcategory: req.body.id,
                 expiryDate: Date.now() + 1000
             } 
 
@@ -45,14 +43,14 @@ exports.create = async (req, res) => {
             }) 
         }
         else{
-            return res.status(404).json({message: "Cannot create voucher as it's Sub-Category/Category doesn't exist"})
+            return res.status(404).json({message: "Cannot create voucher because Root Category doesn't exist"})
         }
     })
 }
 
 exports.read = (req, res) => {
     Voucher.findById(req.voucher.id)
-           .populate('voucherCategory', '_id name category CategoryName')        
+           .populate('rootcategory', '_id name')        
            .exec((err, voucher) => {
                 if(err) return res.status(400).json(err)
                 return res.status(200).json({

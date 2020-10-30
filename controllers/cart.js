@@ -1,6 +1,7 @@
 const Cart = require('../models/cart')
 const Wishlist = require('../models/wishlist')
 const Voucher = require('../models/voucher')
+const { default: Nexmo } = require('nexmo')
 // exports.cartById = (req, res, next, id) => {
 //     Cart.findById(id).exec((err, cart) => {
 //         if(err || !cart) {
@@ -84,6 +85,11 @@ exports.getCartTotal = (req, res) => {
                     })
                 }
                 if(voucher) {
+                    // console.log(voucher)
+                    req.voucher = voucher
+                    console.log("midleware works")
+                    console.log(req.voucher, req.totalAmount)
+                    
                     if(voucher.isExpired == true || voucher.isActive == false) {
                         return res.status(200).json({message: "The voucher is no longer active or has been expired"})
                     } else {
@@ -91,21 +97,21 @@ exports.getCartTotal = (req, res) => {
                         const updatedTotal = Total - voucher.amount
                         return res.status(200).json({
                             status: "success",
-                            CartTotal: updatedTotal
+                            message: `Voucher applied successfully. You get a discount of ${voucher.amount}`,
+                            cartTotal: updatedTotal
                         })               
                     }
                 }
             })
         } else {
+            req.totalAmount = Total
             return res.status(200).json({
                 status: "success",
-                CartTotal: Total
+                cartTotal: Total
             })
-        }
-        
+        }  
     })
 }
-
 
 
 

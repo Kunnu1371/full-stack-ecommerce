@@ -34,6 +34,8 @@ exports.create = async (req, res) => {
         uniqueID: uuidv1(),
         user: req.profile,
         products: [],
+        voucher: req.voucher,
+        totalAmount: req.totalAmount,
         address: req.body.address,
     } 
     order.user.salt = undefined
@@ -60,10 +62,10 @@ exports.create = async (req, res) => {
                         if(err) {
                             return res.status(500).json({error: errorHandler(err)})
                         }
-                        console.log(order)
+                        console.log(order, order.totalAmount, order.voucher) 
                         res.status(201).json({
                             status: "success",
-                            message: "Order created successfully",
+                            message: "Order has been created successfully",
                             order
                         })      
                      
@@ -78,7 +80,7 @@ exports.create = async (req, res) => {
                             let productList = "";
                             for(let i = 1; i <= 1; i++) {
                                 cart.map((products) => {
-                                    console.log("test", products.product.name, products.product.price, products.Quantity,products.product.description)
+                                    // console.log("test", products.product.name, products.product.price, products.Quantity,products.product.description)
                                     productList =
                                     productList +
                                     `
@@ -126,7 +128,7 @@ exports.create = async (req, res) => {
                         .then(sent => console.log('SENT >>>', sent))
                         .catch(err => console.log('ERR >>>', err));
 
-                        console.log("getProductList: ", getProductList())
+                        // console.log("getProductList: ", getProductList())
                         // email to buyer
                         const emailData2 = {
                             // to: order.user.email,
@@ -162,9 +164,9 @@ exports.create = async (req, res) => {
                         await decreaseQuantity()
                         
                         // It clears cart after order placed
-                        await Cart.deleteMany({}, (err, result) => {
-                            if(err) return res.status(500).json(err)
-                        })                  
+                        // await Cart.deleteMany({}, (err, result) => {
+                        //     if(err) return res.status(500).json(err)
+                        // })                  
                     })    
                     
 
@@ -178,7 +180,7 @@ exports.create = async (req, res) => {
                                 price.push(products.product.price)
                                 description.push(products.product.description)
                             })      
-                            console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
+                            // console.log("name: ", name, "quantity: ", quantity, "description: ", description, "price: ", price)  
                         }
                         catch (err) {
                             return res.status(400).json(err.message);

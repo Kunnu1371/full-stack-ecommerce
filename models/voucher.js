@@ -12,9 +12,9 @@ const voucherSchema = new mongoose.Schema({
         required: true
     },
 
-    voucherCategory: {
+    rootcategory: {
         type: ObjectId,
-        ref: 'subCategory',
+        ref: 'RootCategory',
         required: true
     },
 

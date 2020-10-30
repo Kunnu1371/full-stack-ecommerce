@@ -2,11 +2,14 @@ const RootCategory = require('../models/rootCategory')
 const Category = require('../models/category')
 const SubCategory = require('../models/subCategory')
 const Product = require('../models/product')
-const { errorHandler } = require('../helpers/dbErrorHandler')
 const formidable = require('formidable')
 const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
+const multer = require('multer')
+const aws = require('aws-sdk')
+const {v1} = require('uuid');
+let uuidv1 = v1;
 
 exports.productById = (req,res, next, id) => {
     Product.findById(id).exec((err, product) => {
@@ -22,277 +25,27 @@ exports.productById = (req,res, next, id) => {
 
 exports.read = async(req, res) => {
     try {
-        const product = await Product.findById(req.product._id).populate('subcategory', '_id name').populate('category', '_id name').populate('rootcategory', '_id name')
+        const product = await Product.findById(req.product._id)
+                                        .populate('subcategory', '_id name')
+                                        .populate('category', '_id name')
+                                        .populate('rootcategory', '_id name')
         return res.status(200).json({ 
             status: "success",
             product
         })
     }
-    catch(e) {
-        return res.json(400).json(e)
-    }
+    catch(e) {return res.json(400).json(e)}
 }
 
 
+
 exports.create = (req, res) => {
-
-    let form = new formidable.IncomingForm()
-    form.keepExtensions = true
-    form.multiples = true
-
-    form.parse(req, async (err, fields, files) => {
-        if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
-
-        let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = fields
-        if(!name || !description || !price || !rootcategory || !category || !subcategory || !quantity || !shipping) {
-            return res.status(400).json({
-                error: "All fields are required."
-            })
-        }
-
-        rootcategory = await RootCategory.findOne({_id: fields.rootcategory})
-        if(!rootcategory) {
-            return res.status(400).json({
-                error: "Root Category doesn't exist. Please make one."
-            })
-        }
-
-        category = await Category.findOne({_id: fields.category})
-        if(!category) {
-            return res.status(400).json({
-                error: "Category doesn't exist. Please make one."
-            })
-        }
-    
-        subcategory = await SubCategory.findOne({_id: fields.subcategory})
-        if(!subcategory) {
-            return res.status(400).json({
-                error: "Sub Category doesn't exist. Please make one."
-            })
-        }
-        console.log(rootcategory, category, subcategory)
-
-        if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
-            return res.status(400).json("Product already exist.")
-        }
-
-        let product = new Product(fields)
-
-        if(files.photo) {
-            if(files.photo.path == undefined) {
-                var filePath = []
-                let doUpload = 1
-                files.photo.map((files) => {
-                    if(files.size > 1*1024*1024) { 
-                        doUpload = 0
-                        return res.status(400).json({error: "Image should be less than 1mb in size."})}  
-    
-                        var oldPath = files.path; 
-                        var newPath = path.join(__dirname, 'uploads') + '/'+files.name 
-                        var rawData = fs.readFileSync(oldPath) 
-                        const obj = {
-                            data: newPath,
-                            contentType: files.type
-                        }
-                        filePath.push(obj)
-                        fs.writeFile(newPath, rawData, (err) => { 
-                            if(err) console.log(err) 
-                        })  
-                    })
-                    if(doUpload == 1) {
-                        product.save((err, result) => {
-                            if(err) {return res.status(500).json({error: err})}
-                            Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
-                                if(err) return res.status(500).json(err)
-                                console.log(filePath)
-                                return res.status(201).json({
-                                    status: "success",
-                                    message: "Product created successfully", 
-                                    Product
-                                })
-                            })
-                        })
-                    }
-                }
-                else {
-                    var filePath = [],
-                    doUpload = 1
-                    if(files.photo.size > 1*1024*1024) {
-                    doUpload = 0
-                    return res.status(400).json({error: "Image should be less than 1mb in size."})}       
         
-                    var oldPath = files.photo.path; 
-                    var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-                    var rawData = fs.readFileSync(oldPath) 
-                    const obj = {
-                        data: newPath,
-                        contentType: files.photo.type
-                    }  
-                    filePath.push(obj)         
-                    fs.writeFile(newPath, rawData, (err) => { 
-                        if(err) console.log(err) 
-                    })   
-                    if(doUpload == 1) {
-                        product.save((err, result) => {
-                            if(err) {return res.status(500).json({error: err})}
-                            Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, Product) => {
-                                if(err) return res.status(500).json(err)
-                                console.log(filePath)
-                                return res.status(201).json({
-                                    status: "success",
-                                    message: "Product created successfully", 
-                                    Product
-                                })
-                            })
-                        })
-                    }
-                }
-            }
-            else {
-                product.save((err, result) => {
-                    if(err) {return res.status(500).json({error: err})}
-                    return res.status(201).json({
-                        status: "success",
-                        message: "Product created successfully", 
-                        result
-                    })
-                })
-            }
-        })
-    }
+}
 
-
-
+exports.update = (req, res) => {
     
-    exports.update = (req, res) => {
-
-        let form = new formidable.IncomingForm()
-        form.keepExtensions = true
-        form.multiples = true
-    
-        form.parse(req, async (err, fields, files) => {
-            if(err) {return res.status(400).json({error: 'Image could not be uploaded'})}
-    
-            let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = fields
-            if(!name || !description || !price || !rootcategory || !category || !subcategory || !quantity || !shipping) {
-                return res.status(400).json({
-                    error: "All fields are required."
-                })
-            }
-
-            rootcategory = await RootCategory.findOne({_id: fields.rootcategory})
-            if(!rootcategory) {
-                return res.status(400).json({
-                    error: "Root Category doesn't exist. Please make one."
-                })
-            }
-
-            category = await Category.findOne({_id: fields.category})
-            if(!category) {
-                return res.status(400).json({
-                    error: "Category doesn't exist. Please make one."
-                })
-            }
-        
-            subcategory = await SubCategory.findOne({_id: fields.subcategory})
-            if(!subcategory) {
-                return res.status(400).json({
-                    error: "Sub Category doesn't exist. Please make one."
-                })
-            }
-            console.log(rootcategory, category, subcategory)
-
-            let product = req.product
-            product = _.extend(product, fields)    
-
-            if(files.photo) {
-                if(files.photo.path == undefined) {
-                    var filePath = []
-                    let doUpload = 1
-                    files.photo.map((files) => {
-                        if(files.size > 1*1024*1024) { 
-                            doUpload = 0
-                            return res.status(400).json({error: "Image should be less than 1mb in size."})}  
-        
-                            var oldPath = files.path; 
-                            var newPath = path.join(__dirname, 'uploads') + '/'+files.name 
-                            var rawData = fs.readFileSync(oldPath) 
-                            const obj = {
-                                data: newPath,
-                                contentType: files.type
-                            }
-                            filePath.push(obj)
-                            fs.writeFile(newPath, rawData, (err) => { 
-                                if(err) console.log(err) 
-                            })  
-                        })
-                        if(doUpload == 1) {
-                            product.save((err, result) => {
-                                if(err) {return res.status(500).json({error: err})}
-                                Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
-                                    if(err) return res.status(500).json(err)
-                                    console.log(filePath)
-                                    return res.status(200).json({
-                                        status: "success",
-                                        message: "Product updated successfully", 
-                                        updated
-                                    })
-                                })
-                            })
-                        }
-                    }
-                    else {
-                        var filePath = [],
-                        doUpload = 1
-                        if(files.photo.size > 1*1024*1024) {
-                        doUpload = 0
-                        return res.status(400).json({error: "Image should be less than 1mb in size."})}       
-            
-                        var oldPath = files.photo.path; 
-                        var newPath = path.join(__dirname, 'uploads') + '/'+files.photo.name 
-                        var rawData = fs.readFileSync(oldPath)  
-                        const obj = {
-                            data: newPath,
-                            contentType: files.photo.type
-                        }  
-                        filePath.push(obj) 
-                        fs.writeFile(newPath, rawData, (err) => { 
-                            if(err) console.log(err) 
-                        })  
-                        if(doUpload == 1) {
-                            product.save((err, result) => {
-                                if(err) {
-                                    console.log("error: ", err)
-                                    return res.status(500).json({error: err})
-                                }
-                                Product.findOneAndUpdate({_id: result.id}, {$set: { photo: filePath }}, {new: true}, (err, updated) => {
-                                    if(err) {return res.status(500).json(err)}
-                                    return res.status(200).json({
-                                        status: "success",
-                                        message: "Product updated successfully", 
-                                        updated
-                                    })
-                                })
-                            })
-                        }
-                    }
-                }
-                else {
-                    product.save((err, updated) => {
-                        if(err) {return res.status(500).json({error: err})}
-                        return res.status(200).json({
-                            status: "success",
-                            message: "Product updated successfully", 
-                            updated
-                        })
-                    }) 
-                }
-            })
-        }
-          
-            
-
-
+}
 exports.remove = (req, res) => {
     let product = req.product
     product.remove((err, deletedProduct) => {
@@ -477,17 +230,21 @@ exports.photo  = (req, res) => {
 
 
 const Cart = require('../models/cart')
-const { S_IFDIR } = require('constants')
-exports.decreaseQuantity = async (req, res) => {
-    await Cart.find().exec((err, cart) => {
-        if(err) { return res.json(err)}
-        cart.map(async (product) => {
+exports.decreaseQuantity = async(req, res) => {
+    try{
+        const cart = await Cart.find().populate("product")
+        cart.map( async(product) => {
+            console.log(product)
             const productQuantityInCart = product.Quantity
-            // console.log(productQuantityInCart)
+            console.log("productQuantityInCart: ", productQuantityInCart)
             await Product.findOneAndUpdate({_id: product.product}, {$inc: { quantity: -productQuantityInCart, sold: +productQuantityInCart }}, {new: true}).exec((err, results) => {
                 if(err) {return res.status(500).json({error: err})}
-                // console.log("Successfully updated product quantity in database", results.quantity)
+                console.log("Successfully updated product quantity in database", results.quantity)
             })
         })
-    })
+    }
+    catch(e) {
+        return res.status(400).json(e)
+    }
+        
 }
