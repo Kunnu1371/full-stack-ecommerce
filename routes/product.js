@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const  { create, read, remove, update, productById, fetch, list, listRelated, listBySearch, photo, paginatedResults }  = require('../controllers/product');
+const  { read, remove, productById, fetch, list, listRelated, listBySearch, photo, paginatedResults }  = require('../controllers/product');
 const { requireSignin, isAdmin, isAuth } = require('../controllers/authAdmin');
 const  { adminById }  = require('../controllers/admin')
 const { subCategoryById } = require('../controllers/subCategory')
@@ -12,6 +12,8 @@ const SubCategory = require('../models/subCategory')
 const Product = require('../models/product')
 const multer = require('multer')
 const path = require('path')
+const aws = require('aws-sdk')
+const fs = require('fs')
 
 router.get('/product/:productId', read)
 router.delete('/product/delete/:productId/:adminId', requireSignin, isAdmin, isAuth, remove)
@@ -27,7 +29,7 @@ router.param('subcategoryId', subCategoryById)
 
 // Set The Storage Engine
 const storage = multer.diskStorage({
-    destination: './uploads/',
+    // destination: './uploads/',
     filename: function(req, file, cb){
     cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
@@ -51,6 +53,7 @@ function checkFileType(file, cb){
     return cb(null,true);
     } else {cb("Only images with PNG, JPG, and JPEG extentions are allowed!");}
 }
+
 router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.array('photo', 6),async function (req, res) {
 
     let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = req.body
@@ -66,7 +69,6 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
         })
     }
     
-  
     rootcategory = await RootCategory.findOne({_id: req.body.rootcategory})
     if(!rootcategory) {return res.status(400).json({error: "Root Category doesn't exist. Please make one."})}
 
@@ -78,6 +80,7 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
     
     
     let array = []
+    console.log(req.files, req.files.length)
     for(x of req.files) {
         let obj = {
             path: path.join(__dirname, 'uploads') + "/" + x.filename,
@@ -88,6 +91,28 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
     
     if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
         return res.status(400).json({error: "Product already exist in database."})
+    }
+
+    const s3 = new aws.S3({
+        accessKeyId: process.env.AWS_ID,
+        secretAccessKey: process.env.AWS_SECRET
+    })
+    
+    for(file of req.files){
+        console.log(file)
+        var buffer = fs.readFileSync(file.path)
+        var params = {
+            Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
+            Key: file.fieldname + '-' + Date.now() + path.extname(file.originalname),
+            Body: buffer
+        }    
+        s3.upload(params, (error, data) => {
+            if(error){
+                res.status(500).send(error)
+            }
+            console.log('uploaded to s3', data)
+            // res.status(200).send(data)
+        })
     }
     const product = new Product(req.body)
     await product.save((err, product) => {
@@ -130,7 +155,7 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
     subcategory = await SubCategory.findOne({_id: req.body.subcategory})
     if(!subcategory) {return res.status(400).json({error: "Sub Category doesn't exist. Please make one."})}
     
-    
+    console.log(req.files, req.files.length)
     let array = []
     for(x of req.files) {
         let obj = {
@@ -140,6 +165,27 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
         array.push(obj)
     }
     
+    const s3 = new aws.S3({
+        accessKeyId: process.env.AWS_ID,
+        secretAccessKey: process.env.AWS_SECRET
+    })
+    
+    for(file of req.files){
+        console.log(file)
+        var buffer = fs.readFileSync(file.path)
+        var params = {
+            Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
+            Key: file.fieldname + '-' + Date.now() + path.extname(file.originalname),
+            Body: buffer
+        }    
+        s3.upload(params, (error, data) => {
+            if(error){
+                res.status(500).send(error)
+            }
+            console.log('uploaded to s3', data)
+            // res.status(200).send(data)
+        })
+    }
     
     const product = req.product
     Product.findOneAndUpdate({_id: product._id}, {$set: req.body}, {new: true}, (err, updatedProduct) => {

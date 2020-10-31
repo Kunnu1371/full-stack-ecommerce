@@ -38,14 +38,6 @@ exports.read = async(req, res) => {
 }
 
 
-
-exports.create = (req, res) => {
-        
-}
-
-exports.update = (req, res) => {
-    
-}
 exports.remove = (req, res) => {
     let product = req.product
     product.remove((err, deletedProduct) => {
