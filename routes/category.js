@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const  { create, read, update, remove, categoryById, list, fetch }  = require('../controllers/Category');
+const  { create, read, update, remove, categoryById, list, fetch }  = require('../controllers/category');
 const { requireSignin, isAdmin, isAuth } = require('../controllers/authAdmin');
 const  { adminById }  = require('../controllers/admin')
 

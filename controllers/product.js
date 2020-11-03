@@ -54,42 +54,6 @@ exports.remove = (req, res) => {
 }
 
 
-// exports.list = async(req, res) => {
-//     await Product.find().exec((err, products) => {
-//         if(err) {
-//             res.status(500).json({error: err})
-//         }
-//         res.status(200).json({
-//             status: "success", 
-//             total: products.length,  
-//             products
-//         }) 
-//     })
-// }
-
-// exports.list = (req, res) => {
-//     let order = req.query.order ? req.query.order : 'asc';
-//     let sortBy = req.query.sortBy ? req.query.sortBy : '_id';
-//     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
-//     console.log(req.query)
-//     Product.find()
-//         .select("-photo")
-//         .populate("category")
-//         // .limit(1)
-//         // .sort([['createdAt', -1]])
-//         .limit(limit)
-//         .sort([[sortBy, order]])
-//         .exec((err, products) => {
-//             if(err) {
-//                 res.status(400).json({
-//                     error: "Product not found"
-//                 })
-//             }
-//            res.json(products)
-//         })
-// }
-
-
 exports.paginatedResults = (Product) => {
     return async (req, res, next) => {
         let order = req.query.order ? req.query.order : 'asc';
@@ -237,6 +201,5 @@ exports.decreaseQuantity = async(req, res) => {
     }
     catch(e) {
         return res.status(400).json(e)
-    }
-        
+    }     
 }

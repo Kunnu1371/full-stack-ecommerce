@@ -198,7 +198,7 @@ exports.create = async (req, res) => {
                         //     return name
                         // })} has been successfully placed. Order no. ${order._id}`;
                         const text = 'Hello World!'
-                        await nexmo.message.sendSms(from, to, text);
+                        nexmo.message.sendSms(from, to, text);
 
                     // order.user.history = undefined
                     // return res.status(201).json({

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const  { read, remove, productById, fetch, list, listRelated, listBySearch, photo, paginatedResults }  = require('../controllers/product');
+const  { read, remove, productById, listRelated, photo, paginatedResults }  = require('../controllers/product');
 const { requireSignin, isAdmin, isAuth } = require('../controllers/authAdmin');
 const  { adminById }  = require('../controllers/admin')
 const { subCategoryById } = require('../controllers/subCategory')
@@ -18,7 +18,7 @@ const fs = require('fs')
 router.get('/product/:productId', read)
 router.delete('/product/delete/:productId/:adminId', requireSignin, isAdmin, isAuth, remove)
 router.get('/products/related/:productId', listRelated)
-router.post("/products/by/search", listBySearch);
+// router.post("/products/by/search", listBySearch);
 router.get('/product/photo/:productId', photo)
 router.get('/products', paginatedResults(Product))
   
@@ -77,18 +77,7 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
 
     subcategory = await SubCategory.findOne({_id: req.body.subcategory})
     if(!subcategory) {return res.status(400).json({error: "Sub Category doesn't exist. Please make one."})}
-    
-    
-    let array = []
-    console.log(req.files, req.files.length)
-    for(x of req.files) {
-        let obj = {
-            path: path.join(__dirname, 'uploads') + "/" + x.filename,
-            contentType: x.mimetype
-        }
-        array.push(obj)
-    }
-    
+        
     if(await Product.findOne({ name: {$regex: name, $options:"$i"}})) {
         return res.status(400).json({error: "Product already exist in database."})
     }
@@ -97,41 +86,65 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
         accessKeyId: process.env.AWS_ID,
         secretAccessKey: process.env.AWS_SECRET
     })
-    
-    for(file of req.files){
-        console.log(file)
-        var buffer = fs.readFileSync(file.path)
-        var params = {
-            Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
-            Key: file.fieldname + '-' + Date.now() + path.extname(file.originalname),
-            Body: buffer
-        }    
-        s3.upload(params, (error, data) => {
-            if(error){
-                res.status(500).send(error)
+    // console.log(req.files, req.files.length)
+
+    if(req.files[0] != undefined) {
+        var array = []
+        req.files.map(async(file) => {
+            // console.log(file)
+            var buffer = fs.readFileSync(file.path)
+            let key = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
+            var params = {
+                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
+                Key: key,
+                Body: buffer,
+                ACL: "public-read"
+            }    
+            s3.upload(params, async(error, data) => {
+                if(error){ 
+                    console.log("error: ", error)
+                    return res.status(500).json(error)
+                }
+                console.log('uploaded to s3', data)
+                // res.status(200).send(data)
+            })
+            const object = {
+                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/" + key,
+                key: key
             }
-            console.log('uploaded to s3', data)
-            // res.status(200).send(data)
-        })
-    }
-    const product = new Product(req.body)
-    await product.save((err, product) => {
-        if(err) return res.status(500).json(err)
-        Product.findOneAndUpdate({_id: product.id}, {$set: { photo: array }}, {new: true}, (err, product) => {
+            array.push(object)
+        }) 
+        const product = new Product(req.body)
+        product.photo = array
+        await product.save((err, product) => {
             if(err) return res.status(500).json(err)
             return res.status(201).json({
                 status: "success",
-                message: "Product created successfully", 
+                message: "Product created successfully",
+                product
+            })        
+        })
+    } 
+    else { 
+        const product = new Product(req.body)
+        await product.save((err, product) => {
+            if(err) return res.status(500).json(err)
+            return res.status(201).json({
+                status: "success",
+                message: "Product created successfully",
                 product
             })
-        })
-    })
+        })    
+    }
 })
 
 
 
+ 
+
 router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth, upload.array('photo', 6),async function (req, res) {
 
+   
     let { name, description, price, rootcategory, category, subcategory, quantity, shipping } = req.body
     if(!name || !description || !price || !rootcategory || !category || !subcategory || !quantity || !shipping) {
         return res.status(400).json({
@@ -145,7 +158,6 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
         })
     }
     
-  
     rootcategory = await RootCategory.findOne({_id: req.body.rootcategory})
     if(!rootcategory) {return res.status(400).json({error: "Root Category doesn't exist. Please make one."})}
 
@@ -154,51 +166,57 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
 
     subcategory = await SubCategory.findOne({_id: req.body.subcategory})
     if(!subcategory) {return res.status(400).json({error: "Sub Category doesn't exist. Please make one."})}
-    
-    console.log(req.files, req.files.length)
-    let array = []
-    for(x of req.files) {
-        let obj = {
-            path: path.join(__dirname, 'uploads') + "/" + x.filename,
-            contentType: x.mimetype
-        }
-        array.push(obj)
-    }
-    
+
+
     const s3 = new aws.S3({
         accessKeyId: process.env.AWS_ID,
         secretAccessKey: process.env.AWS_SECRET
     })
-    
-    for(file of req.files){
-        console.log(file)
-        var buffer = fs.readFileSync(file.path)
-        var params = {
-            Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
-            Key: file.fieldname + '-' + Date.now() + path.extname(file.originalname),
-            Body: buffer
-        }    
-        s3.upload(params, (error, data) => {
-            if(error){
-                res.status(500).send(error)
+    // console.log(req.files, req.files.length)
+
+    if(req.files[0] != undefined) {
+        var array = []
+        req.files.map(async(file) => {
+            // console.log(file)
+            var buffer = fs.readFileSync(file.path)
+            let key = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
+            var params = {
+                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom',
+                Key: key,
+                Body: buffer,
+                ACL: "public-read"
+            }    
+            s3.upload(params, async(error, data) => {
+                if(error){ 
+                    console.log("error: ", error)
+                    return res.status(500).json(error)
+                }
+                console.log('uploaded to s3', data)
+                // res.status(200).send(data)
+            })
+            const object = {
+                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/" + key,
+                key: key
             }
-            console.log('uploaded to s3', data)
-            // res.status(200).send(data)
-        })
-    }
-    
-    const product = req.product
-    Product.findOneAndUpdate({_id: product._id}, {$set: req.body}, {new: true}, (err, updatedProduct) => {
-        if(err) return res.status(500).json(err)
-        Product.findOneAndUpdate({_id: updatedProduct._id}, {$set: {photo: array}}, {new: true}, (err, updatedProduct) => {
+            array.push(object)
+        }) 
+        const product = new Product(req.body)
+        product.photo = array
+        await product.save((err, product) => {
             if(err) return res.status(500).json(err)
-            return res.status(201).json({
-                status: "success",
-                message: "Product updated successfully", 
-                updatedProduct
+            return res.status(201).json({status: "success", product})
+        })
+    } 
+    else { 
+       await Product.findByIdAndUpdate(req.params.productId, {$set: req.body}, {new: true}).exec((err, updatedProduct) => {
+       if(err) return res.status(500).json(err)
+        return res.status(201).json({
+            status: "success", 
+            message: "Product updated successfully",
+            updatedProduct
             })
         })
-    })
+    }
 })
 
 module.exports = router;

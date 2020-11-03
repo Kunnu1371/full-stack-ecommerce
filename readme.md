@@ -46,6 +46,8 @@
         <li>Get cart total</li>
     </ul>
 
+<li>Upload images to aws s3</li>
+
 <li>Wishlist</li>
     <ul>
         <li>Add Products</li>
