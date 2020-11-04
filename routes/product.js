@@ -199,9 +199,9 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
             }
             array.push(object)
         }) 
-        await Product.findByIdAndUpdate(req.params.productId, {$set: req.body, $set: {photo: array}}, {new: true}).exec((err, updatedProduct) => { 
+        await Product.findByIdAndUpdate(req.params.productId, {$set: req.body, photo: array}, {new: true}).exec((err, updatedProduct) => { 
             if(err) return res.status(500).json(err)
-            return res.status(201).json({
+            return res.status(200).json({
                 status: "success", 
                 message: "Product updated successfully",
                 updatedProduct
@@ -211,7 +211,7 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
     else { 
        await Product.findByIdAndUpdate(req.params.productId, {$set: req.body}, {new: true}).exec((err, updatedProduct) => {
        if(err) return res.status(500).json(err)
-        return res.status(201).json({
+        return res.status(200).json({
             status: "success", 
             message: "Product updated successfully",
             updatedProduct

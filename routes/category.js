@@ -156,7 +156,7 @@ async function(req, res) {
         var buffer = fs.readFileSync(file.path)
             let key = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
             var params = {
-                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom' + '/' + 'RootCategory',
+                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom' + '/' + 'Category',
                 Key: key,
                 Body: buffer,
                 ACL: "public-read"
@@ -170,7 +170,7 @@ async function(req, res) {
                 // res.status(200).send(data)
             })
             const object = {
-                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/RootCategory/" + key,
+                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/Category/" + key,
                 key: key
             }
             await Category.findByIdAndUpdate(req.params.categoryId, {$set: req.body, photo: object }, {new: true}).exec((err, updatedCategory) => { 

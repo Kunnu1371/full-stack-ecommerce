@@ -67,7 +67,7 @@ async function(req, res) {
         var buffer = fs.readFileSync(file.path)
             let key = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
             var params = {
-                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom' + '/' + 'Category',
+                Bucket: process.env.AWS_BUCKET_NAME + '/' + 'Smartaxom' + '/' + 'RootCategory',
                 Key: key,
                 Body: buffer,
                 ACL: "public-read"
@@ -81,7 +81,7 @@ async function(req, res) {
                 // res.status(200).send(data)
             })
             const object = {
-                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/Category/" + key,
+                filePath: "https://kunnu1371.s3.ap-south-1.amazonaws.com/Smartaxom/RootCategory/" + key,
                 key: key
             }
         const rootcategory = new RootCategory(req.body)
@@ -116,10 +116,6 @@ async function(req, res) {
         return res.status(400).json({
             error: "Name is required. Please enter root category name"
         })
-    }
-    // check category already exist in db or not
-    if(await RootCategory.findOne({ name: { $regex: `^${req.body.name.trim()}$`, $options: "i" } })) {
-        return res.status(400).json({error: "Root Category already exists"})
     }
     
     const s3 = new aws.S3({
