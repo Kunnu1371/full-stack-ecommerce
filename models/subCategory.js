@@ -8,6 +8,10 @@ const subCategorySchema = new mongoose.Schema({
         required: true,
         maxlength: 60
     }, 
+    photo: {
+        type: Array,
+        default: []
+    },
     rootcategory: {
         type: ObjectId,
         ref: 'RootCategory',

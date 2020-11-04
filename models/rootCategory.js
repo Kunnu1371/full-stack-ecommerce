@@ -6,7 +6,11 @@ const rootCategorySchema = new mongoose.Schema({
         trim: true,
         required: true,
         maxlength: 60
-    }
+    },
+    photo: {
+        type: Array,
+        default: []
+    },
 },  {
     timestamps: true 
 })

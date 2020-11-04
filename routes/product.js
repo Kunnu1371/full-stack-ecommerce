@@ -18,7 +18,6 @@ const fs = require('fs')
 router.get('/product/:productId', read)
 router.delete('/product/delete/:productId/:adminId', requireSignin, isAdmin, isAuth, remove)
 router.get('/products/related/:productId', listRelated)
-// router.post("/products/by/search", listBySearch);
 router.get('/product/photo/:productId', photo)
 router.get('/products', paginatedResults(Product))
   
@@ -87,8 +86,8 @@ router.post('/product/create/:adminId', requireSignin, isAdmin, isAuth, upload.a
         secretAccessKey: process.env.AWS_SECRET
     })
     // console.log(req.files, req.files.length)
-
-    if(req.files[0] != undefined) {
+    const length = req.files.length
+    if(length) {
         var array = []
         req.files.map(async(file) => {
             // console.log(file)
@@ -173,8 +172,8 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
         secretAccessKey: process.env.AWS_SECRET
     })
     // console.log(req.files, req.files.length)
-
-    if(req.files[0] != undefined) {
+    const length = req.files.length
+    if(length) {
         var array = []
         req.files.map(async(file) => {
             // console.log(file)
@@ -200,12 +199,14 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
             }
             array.push(object)
         }) 
-        const product = new Product(req.body)
-        product.photo = array
-        await product.save((err, product) => {
+        await Product.findByIdAndUpdate(req.params.productId, {$set: req.body, $set: {photo: array}}, {new: true}).exec((err, updatedProduct) => { 
             if(err) return res.status(500).json(err)
-            return res.status(201).json({status: "success", product})
-        })
+            return res.status(201).json({
+                status: "success", 
+                message: "Product updated successfully",
+                updatedProduct
+                })
+            })
     } 
     else { 
        await Product.findByIdAndUpdate(req.params.productId, {$set: req.body}, {new: true}).exec((err, updatedProduct) => {
@@ -216,7 +217,7 @@ router.put('/product/update/:productId/:adminId', requireSignin, isAdmin, isAuth
             updatedProduct
             })
         })
-    }
+    }       
 })
 
 module.exports = router;

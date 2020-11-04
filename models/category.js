@@ -9,6 +9,11 @@ const categorySchema = new mongoose.Schema({
         maxlength: 60
     },
 
+    photo: {
+        type: Array,
+        default: []
+    },
+    
     rootcategory: {
         type: ObjectId,
         ref: 'RootCategory',
